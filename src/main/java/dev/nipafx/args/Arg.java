@@ -1,5 +1,6 @@
 package dev.nipafx.args;
 
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 
@@ -8,7 +9,7 @@ import static dev.nipafx.args.Check.nonNull;
 final class Arg<T> {
 
 	private final static Set<Class<?>> SUPPORTED_TYPES = Set.of(
-			String.class,
+			String.class, Path.class,
 			Integer.class, int.class, Long.class, long.class,
 			Float.class, float.class, Double.class, double.class,
 			Boolean.class, boolean.class);
@@ -44,8 +45,10 @@ final class Arg<T> {
 	 * @throws IllegalStateException if this Arg's {@link Arg#type()} is not supported
 	 */
 	public void setValue(String value) throws IllegalArgumentException, IllegalStateException {
+		@SuppressWarnings("unchecked")
 		T parsed = (T) switch (type.getSimpleName()) {
 			case "String" -> value;
+			case "Path" -> Path.of(value);
 			case "Integer", "int" -> Integer.parseInt(value);
 			case "Long", "long" -> Long.parseLong(value);
 			case "Float", "float" -> Float.parseFloat(value);

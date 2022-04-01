@@ -3,6 +3,8 @@ package dev.nipafx.args;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Path;
+
 import static dev.nipafx.args.ArgsCode.MISSING_ARGUMENT;
 import static dev.nipafx.args.ArgsCode.MISSING_VALUE;
 import static dev.nipafx.args.ArgsCode.UNKNOWN_ARGUMENT;
@@ -89,6 +91,14 @@ class ArgsTests {
 			WithString parsed = Args.parse(args, WithString.class);
 
 			assertThat(parsed.stringArg()).isEqualTo("foobar");
+		}
+
+		@Test
+		void withPathArg_programWithPathArg_parses() throws ArgsException {
+			String[] args = { "--pathArg", "/tmp" };
+			WithPath parsed = Args.parse(args, WithPath.class);
+
+			assertThat(parsed.pathArg()).isEqualTo(Path.of("/tmp"));
 		}
 
 		@Test
@@ -179,6 +189,7 @@ class ArgsTests {
 	record None() { }
 
 	record WithString(String stringArg) { }
+	record WithPath(Path pathArg) { }
 	record WithInteger(int intArg) { }
 	record WithLong(long longArg) { }
 	record WithFloat(float floatArg) { }

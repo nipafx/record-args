@@ -40,7 +40,7 @@ record ServerArgs(String url, int port) { }
 An argument name must in most cases be followed by exactly one value that can be parsed to the argument's type.
 Supported types are:
 
-* `String`
+* `String`, `Path`
 * `Integer`, `int`, `Long`, `long`
 * `Float`, `float`, `Double`, `double`
 * `Boolean`, `boolean` (only values "true" and "false")
