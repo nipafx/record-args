@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 import static dev.nipafx.args.ArgsCode.MISSING_ARGUMENT;
 import static dev.nipafx.args.ArgsCode.MISSING_VALUE;
@@ -134,7 +135,7 @@ class ArgsTests {
 		}
 
 		@Test
-		void withBooleanArg_programWithFalseBooleanArg_parses() throws ArgsException {
+		void withBooleanFalseArg_programWithBooleanArg_parses() throws ArgsException {
 			String[] args = { "--booleanArg", "false" };
 			WithBoolean parsed = Args.parse(args, WithBoolean.class);
 
@@ -142,7 +143,7 @@ class ArgsTests {
 		}
 
 		@Test
-		void withBooleanArg_programWithTrueBooleanArg_parses() throws ArgsException {
+		void withTrueBooleanArg_programWithBooleanArg_parses() throws ArgsException {
 			String[] args = { "--booleanArg", "true" };
 			WithBoolean parsed = Args.parse(args, WithBoolean.class);
 
@@ -150,7 +151,7 @@ class ArgsTests {
 		}
 
 		@Test
-		void withBooleanArg_programWithBooleanArgWithoutValue_parses() throws ArgsException {
+		void withBooleanArgWithoutValue_programWithBooleanArg_parses() throws ArgsException {
 			String[] args = { "--booleanArg" };
 			WithBoolean parsed = Args.parse(args, WithBoolean.class);
 
@@ -160,14 +161,36 @@ class ArgsTests {
 	}
 
 	@Nested
+	class ParsingOptionalValues {
+
+		@Test
+		void withoutArgs_programWithOptionalArg_parses() throws ArgsException {
+			String[] args = { };
+			WithOptional parsed = Args.parse(args, WithOptional.class);
+
+			assertThat(parsed.optionalArg()).isEmpty();
+		}
+
+		@Test
+		void withArgs_programWithOptionalArg_parses() throws ArgsException {
+			String[] args = { "--optionalArg", "string" };
+			WithOptional parsed = Args.parse(args, WithOptional.class);
+
+			assertThat(parsed.optionalArg()).contains("string");
+		}
+
+	}
+
+	@Nested
 	class ParsingMultipleValues {
 
 		@Test
 		void multipleArgs_correctValuesInOrder_parses() throws ArgsException {
-			String[] args = { "--stringArg", "string", "--intArg", "5", "--floatArg", "5.5", "--booleanArg", "true" };
+			String[] args = { "--stringArg", "string", "--pathArg", "/tmp", "--intArg", "5", "--floatArg", "5.5", "--booleanArg", "true" };
 			WithMany parsed = Args.parse(args, WithMany.class);
 
 			assertThat(parsed.stringArg()).isEqualTo("string");
+			assertThat(parsed.pathArg()).contains(Path.of("/tmp"));
 			assertThat(parsed.intArg()).isEqualTo(5);
 			assertThat(parsed.floatArg()).isEqualTo(5.5f);
 			assertThat(parsed.booleanArg()).isTrue();
@@ -179,6 +202,7 @@ class ArgsTests {
 			WithMany parsed = Args.parse(args, WithMany.class);
 
 			assertThat(parsed.stringArg()).isEqualTo("string");
+			assertThat(parsed.pathArg()).isEmpty();
 			assertThat(parsed.intArg()).isEqualTo(5);
 			assertThat(parsed.floatArg()).isEqualTo(5.5f);
 			assertThat(parsed.booleanArg()).isTrue();
@@ -188,6 +212,7 @@ class ArgsTests {
 
 	record None() { }
 
+	record WithOptional(Optional<String> optionalArg) { }
 	record WithString(String stringArg) { }
 	record WithPath(Path pathArg) { }
 	record WithInteger(int intArg) { }
@@ -197,5 +222,6 @@ class ArgsTests {
 	record WithBoolean(boolean booleanArg) { }
 
 	record WithStringArray(String[] stringsArg) { }
-	record WithMany(String stringArg, int intArg, float floatArg, boolean booleanArg) { }
+	record WithMany(String stringArg, Optional<Path> pathArg, int intArg, float floatArg, boolean booleanArg) { }
+
 }

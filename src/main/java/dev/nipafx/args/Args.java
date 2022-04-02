@@ -35,7 +35,7 @@ public class Args {
 	}
 
 	private static Arg<?> readComponent(RecordComponent component) {
-		return new Arg<>(component.getName(), component.getType());
+		return Arg.of(component.getName(), component.getGenericType());
 	}
 
 	private record ConstructorArguments(Class<?>[] parameters, Object[] arguments, List<ArgsMessage> errors) { }
@@ -46,13 +46,14 @@ public class Args {
 				.map(Arg::type)
 				.toArray(Class<?>[]::new);
 		Object[] arguments = args.stream()
-				.peek(arg -> {
+				.map(arg -> {
 					if (arg.value().isEmpty()) {
 						String message = "No value for required argument '%s'.".formatted(arg.name());
 						errors.add(new ArgsMessage(MISSING_ARGUMENT, message));
-					}
+						return null;
+					} else
+						return arg.value().get();
 				})
-				.map(arg -> arg.value().orElse(null))
 				.toArray(Object[]::new);
 		return new ConstructorArguments(parameters, arguments, errors);
 	}

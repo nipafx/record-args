@@ -9,7 +9,6 @@ import static dev.nipafx.args.ArgsCode.MISSING_VALUE;
 import static dev.nipafx.args.ArgsCode.UNEXPECTED_VALUE;
 import static dev.nipafx.args.ArgsCode.UNKNOWN_ARGUMENT;
 import static dev.nipafx.args.ArgsCode.UNPARSEABLE_VALUE;
-import static dev.nipafx.args.ArgsCode.UNSUPPORTED_ARGUMENT_TYPE;
 import static dev.nipafx.args.Check.nonNull;
 
 class ArgsParser {

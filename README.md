@@ -22,7 +22,7 @@ Specifically, it uses their component names to parse command line arguments, the
    ```
 
 In most cases, the passed arguments must alternative between an argument's name (prefixed by `--`) and its value.
-A value must be defined for all arguments (i.e. there are no optional arguments).
+A value must be defined for all arguments that aren't of type `Optional`.
 
 ## Argument names
 
@@ -44,6 +44,7 @@ Supported types are:
 * `Integer`, `int`, `Long`, `long`
 * `Float`, `float`, `Double`, `double`
 * `Boolean`, `boolean` (only values "true" and "false")
+* `Optional<VALUE>`, where `VALUE` is any of the types above
 
 The boolean types are an exception to the rule that an argument name must always be followed by a type.
 If no value is given, `true` is assumed.
