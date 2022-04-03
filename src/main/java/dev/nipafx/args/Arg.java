@@ -3,6 +3,8 @@ package dev.nipafx.args;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -60,6 +62,13 @@ abstract class AbstractArg<T> {
 					var valueType = paramType.getActualTypeArguments()[0];
 					if (valueType instanceof Class classType)
 						yield new OptionalArg<>(name, assertSupported(classType));
+					else
+						throw unexpectedArgumentException(type);
+				}
+				case "java.util.List" -> {
+					var valueType = paramType.getActualTypeArguments()[0];
+					if (valueType instanceof Class classType)
+						yield new ListArg<>(name, assertSupported(classType));
 					else
 						throw unexpectedArgumentException(type);
 				}
@@ -149,6 +158,29 @@ final class OptionalArg<T> extends AbstractArg<Optional> implements Arg<Optional
 	@Override
 	public Optional<Optional> value() {
 		return Optional.of(value);
+	}
+
+}
+
+@SuppressWarnings("rawtypes")
+final class ListArg<T> extends AbstractArg<List> implements Arg<List> {
+
+	private final Class<T> valueType;
+	private final List<T> values;
+
+	ListArg(String name, Class<T> valueType) {
+		super(name, List.class);
+		this.valueType = valueType;
+		this.values = new ArrayList<>();
+	}
+
+	public void setValue(String value) throws IllegalArgumentException {
+		this.values.add(parseValueToType(value, valueType));
+	}
+
+	@Override
+	public Optional<List> value() {
+		return Optional.of(List.copyOf(values));
 	}
 
 }

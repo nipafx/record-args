@@ -81,11 +81,21 @@ class ArgsParser {
 		protected final State transition(
 				String argString,
 				Function<Arg<?>, ? extends State> createStateForArg,
-				Function<String, ? extends State> createStateForMissingArg,
+				Function<String, ? extends State> createStateForUnknownArg,
 				Function<String, ? extends State> createStateForValue) {
 			return asArgName(argString)
-					.map(argName -> transitionToArgumentState(argName, createStateForArg, createStateForMissingArg))
+					.map(argName -> transitionToArgumentState(argName, createStateForArg, createStateForUnknownArg))
 					.orElseGet(() -> createStateForValue.apply(argString));
+		}
+
+		protected final void setValue(Arg<?> arg, String argString) {
+			try {
+				arg.setValue(argString);
+			} catch (IllegalArgumentException ex) {
+				var message = "Value '%s' could not be parsed to '%s's type %s."
+						.formatted(argString, arg.name(), arg.type().getSimpleName());
+				mutableErrors.add(new ArgsMessage(UNPARSEABLE_VALUE, message, ex));
+			}
 		}
 
 		@Override
@@ -101,7 +111,7 @@ class ArgsParser {
 			return transition(
 					argString,
 					ExpectingValue::new,
-					argName -> new IgnoringValue(),
+					unknownArgName -> new IgnoringValue(),
 					string -> {
 						var message = "Expected an option but got argument '%s' instead.".formatted(string);
 						mutableErrors.add(new ArgsMessage(UNEXPECTED_VALUE, message));
@@ -127,34 +137,47 @@ class ArgsParser {
 						processMissingValue();
 						return new ExpectingValue(arg);
 					},
-					argName -> new IgnoringValue(),
+					unknownArgName -> new IgnoringValue(),
 					string -> {
-						setValue(string);
-						return new ExpectingName();
+						setValue(currentArg, string);
+						return new ExpectingNameOrAdditionalValue(currentArg);
 					});
 		}
 
 		private void processMissingValue() {
 			if (currentArg.type() == Boolean.class || currentArg.type() == boolean.class)
-				setValue("true");
+				setValue(currentArg, "true");
 			else {
 				var message = "No value was assigned to arg '%s'.".formatted(currentArg.name());
 				mutableErrors.add(new ArgsMessage(MISSING_VALUE, message));
 			}
 		}
 
-		private void setValue(String argString) {
-			try {
-				currentArg.setValue(argString);
-			} catch (IllegalArgumentException ex) {
-				var message = "Value '%s' could not be parsed to '%s's type %s.".formatted(argString, currentArg.name(), currentArg.type().getSimpleName());
-				mutableErrors.add(new ArgsMessage(UNPARSEABLE_VALUE, message, ex));
-			}
-		}
-
 		@Override
 		public void finish() {
 			processMissingValue();
+		}
+
+	}
+
+	private final class ExpectingNameOrAdditionalValue extends GeneralState {
+
+		private final Arg<?> currentArg;
+
+		ExpectingNameOrAdditionalValue(Arg<?> currentArg) {
+			this.currentArg = nonNull(currentArg);
+		}
+
+		@Override
+		public State transition(String argString) {
+			return transition(
+					argString,
+					ExpectingValue::new,
+					unknownArgName -> new IgnoringValue(),
+					string -> {
+						setValue(currentArg, string);
+						return this;
+					});
 		}
 
 	}

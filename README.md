@@ -22,11 +22,11 @@ Specifically, it uses their component names to parse command line arguments, the
    ```
 
 In most cases, the passed arguments must alternative between an argument's name (prefixed by `--`) and its value.
-A value must be defined for all arguments that aren't of type `Optional`.
+A value must be defined for all arguments that aren't of a container type (see below).
 
 ## Argument names
 
-The record component names define the argument names.
+The arg record's component names define the argument names.
 So for a record like the following ...
 
 ```java
@@ -35,16 +35,17 @@ record ServerArgs(String url, int port) { }
 
 ... the arguments `--url` and `--port` are parsed.
 
-## Argument values (and types)
+## Simple arguments
 
 An argument name must in most cases be followed by exactly one value that can be parsed to the argument's type.
-Supported types are:
+Supported simple types are:
 
 * `String`, `Path`
 * `Integer`, `int`, `Long`, `long`
 * `Float`, `float`, `Double`, `double`
 * `Boolean`, `boolean` (only values "true" and "false")
-* `Optional<VALUE>`, where `VALUE` is any of the types above
+
+### Boolean arguments
 
 The boolean types are an exception to the rule that an argument name must always be followed by a type.
 If no value is given, `true` is assumed.
@@ -63,3 +64,60 @@ java [...] --createLog --url localhost:8080
 ```
 
 ... and `serverArgs.createLog()` would return `true`.
+
+## Container arguments
+
+Beyond that, the following container types are supported:
+
+* `Optional<VALUE>`, where `VALUE` is any of the simple types above  (but no `OptionalInt`, `OptionalLong`, `OptionalDouble`)
+* `List<VALUE>`, where `VALUE` is any of the simple types above
+
+Container types are always optional.
+
+### Optional arguments
+
+Arguments of type `Optional` are optional (talk about good naming!).
+Given the following command ...
+
+```
+java [...] --url localhost
+```
+
+... this arg record would lead to an exception during parsing because `port` wasn't defined:
+
+```java
+record ServerArgs(String url, int port) { }
+```
+
+To allow `port` to be optional, use `Optional`:
+
+```java
+record ServerArgs(String url, Optional<Integer> port) { }
+```
+
+### List arguments
+
+Arguments of type `List` accept one or more arguments.
+If not mentioned, they are empty, which makes them optional as well.
+That means for the following arg record ...
+
+```java
+record ServerArgs(List<String> urls, boolean createLog) { }
+```
+
+... any of the following command lines are acceptable:
+
+```
+java [...] --createLog
+java [...] --createLog --urls localhost
+java [...] --createLog --urls localhost 127.0.0.1
+java [...] --urls localhost 127.0.0.1 --createLog
+```
+
+While just mentioning a list argument without providing a value ...
+
+```
+java [...] --urls --createLog
+```
+
+... could be parsed to the empty list, this non-sensical command is instead interpreted as a mistake and leads to an exception.
