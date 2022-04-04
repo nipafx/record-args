@@ -9,6 +9,7 @@ import java.util.Optional;
 
 import static dev.nipafx.args.ArgsCode.MISSING_ARGUMENT;
 import static dev.nipafx.args.ArgsCode.MISSING_VALUE;
+import static dev.nipafx.args.ArgsCode.UNEXPECTED_VALUE;
 import static dev.nipafx.args.ArgsCode.UNKNOWN_ARGUMENT;
 import static dev.nipafx.args.ArgsCode.UNPARSEABLE_VALUE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -71,6 +72,16 @@ class ArgsTests {
 			assertThat(exception.errors())
 					.map(ArgsMessage::code)
 					.containsExactlyInAnyOrder(UNKNOWN_ARGUMENT);
+		}
+
+		@Test
+		void expectedArgWithMultipleValues_unexpectedValueError() {
+			String[] args = { "--stringArg", "one", "two" };
+			var exception = assertThrows(
+					ArgsException.class, () -> Args.parse(args, WithString.class));
+			assertThat(exception.errors())
+					.map(ArgsMessage::code)
+					.containsExactlyInAnyOrder(UNEXPECTED_VALUE);
 		}
 
 		@Test

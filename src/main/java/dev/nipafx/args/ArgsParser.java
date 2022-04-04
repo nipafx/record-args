@@ -140,7 +140,9 @@ class ArgsParser {
 					unknownArgName -> new IgnoringValue(),
 					string -> {
 						setValue(currentArg, string);
-						return new ExpectingNameOrAdditionalValue(currentArg);
+						return currentArg.type() == List.class
+								? new ExpectingNameOrAdditionalValue(currentArg)
+								: new ExpectingName();
 					});
 		}
 
