@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static dev.nipafx.args.ArgsCode.MISSING_ARGUMENT;
@@ -30,7 +31,7 @@ class ArgsTests {
 		}
 
 		@Test
-		void withoutArgs_programWithBooleanArg_missingArgumentError() throws ArgsException {
+		void withoutArgs_programWithBooleanArg_missingArgumentError() {
 			String[] args = { };
 			var exception = assertThrows(ArgsException.class, () -> Args.parse(args, WithBoolean.class));
 			assertThat(exception.errors())
@@ -39,12 +40,30 @@ class ArgsTests {
 		}
 
 		@Test
-		void mentionsListArgWithoutValue_missingValueError() throws ArgsException {
+		void mentionsListArgWithoutValue_missingValueError() {
 			String[] args = { "--stringArgs" };
 			var exception = assertThrows(ArgsException.class, () -> Args.parse(args, WithList.class));
 			assertThat(exception.errors())
 					.map(ArgsMessage::code)
 					.containsExactlyInAnyOrder(MISSING_VALUE);
+		}
+
+		@Test
+		void mentionsMapArgWithoutValue_missingValueError() {
+			String[] args = { "--mapArgs" };
+			var exception = assertThrows(ArgsException.class, () -> Args.parse(args, WithMap.class));
+			assertThat(exception.errors())
+					.map(ArgsMessage::code)
+					.containsExactlyInAnyOrder(MISSING_VALUE);
+		}
+
+		@Test
+		void mapArgWithIncompleteValue_missingValueError() {
+			String[] args = { "--mapArgs", "one" };
+			var exception = assertThrows(ArgsException.class, () -> Args.parse(args, WithMap.class));
+			assertThat(exception.errors())
+					.map(ArgsMessage::code)
+					.containsExactlyInAnyOrder(UNPARSEABLE_VALUE);
 		}
 
 		@Test
@@ -249,6 +268,50 @@ class ArgsTests {
 	}
 
 	@Nested
+	class ParsingMapValues {
+
+		@Test
+		void withoutArgs_programWithMapArg_parses() throws ArgsException {
+			String[] args = { };
+			WithMap parsed = Args.parse(args, WithMap.class);
+
+			assertThat(parsed.mapArgs()).isEmpty();
+		}
+
+		@Test
+		void withOneArgPair_programWithMapArg_parses() throws ArgsException {
+			String[] args = { "--mapArgs", "1=one" };
+			WithMap parsed = Args.parse(args, WithMap.class);
+
+			assertThat(parsed.mapArgs()).isEqualTo(Map.of(1, "one"));
+		}
+
+		@Test
+		void withMultipleArgPairs_programWithMapArg_parses() throws ArgsException {
+			String[] args = { "--mapArgs", "1=one", "2=two", "3=three" };
+			WithMap parsed = Args.parse(args, WithMap.class);
+
+			assertThat(parsed.mapArgs()).isEqualTo(Map.of(
+					1, "one",
+					2, "two",
+					3, "three"));
+		}
+
+		@Test
+		void withMultipleArgPairsFollowedByOtherArg_programWithMapArg_parses() throws ArgsException {
+			String[] args = { "--mapArgs", "1=one", "2=two", "3=three", "--booleanArg" };
+			WithMapAndMore parsed = Args.parse(args, WithMapAndMore.class);
+
+			assertThat(parsed.mapArgs()).isEqualTo(Map.of(
+					1, "one",
+					2, "two",
+					3, "three"));
+			assertThat(parsed.booleanArg()).isTrue();
+		}
+
+	}
+
+	@Nested
 	class ParsingMultipleValues {
 
 		@Test
@@ -292,6 +355,8 @@ class ArgsTests {
 	record WithOptional(Optional<String> optionalArg) { }
 	record WithList(List<String> stringArgs) { }
 	record WithListAndMore(List<String> stringArgs, boolean booleanArg) { }
+	record WithMap(Map<Integer, String> mapArgs) { }
+	record WithMapAndMore(Map<Integer, String> mapArgs, boolean booleanArg) { }
 
 	record WithStringArray(String[] stringsArg) { }
 	record WithMany(

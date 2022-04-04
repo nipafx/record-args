@@ -4,7 +4,9 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -69,6 +71,14 @@ abstract class AbstractArg<T> {
 					var valueType = paramType.getActualTypeArguments()[0];
 					if (valueType instanceof Class classType)
 						yield new ListArg<>(name, assertSupported(classType));
+					else
+						throw unexpectedArgumentException(type);
+				}
+				case "java.util.Map" -> {
+					var keyType = paramType.getActualTypeArguments()[0];
+					var valueType = paramType.getActualTypeArguments()[1];
+					if (keyType instanceof Class keyClass && valueType instanceof Class valueClass)
+						yield new MapArg<>(name, assertSupported(keyClass), assertSupported(valueClass));
 					else
 						throw unexpectedArgumentException(type);
 				}
@@ -181,6 +191,41 @@ final class ListArg<T> extends AbstractArg<List> implements Arg<List> {
 	@Override
 	public Optional<List> value() {
 		return Optional.of(List.copyOf(values));
+	}
+
+}
+
+@SuppressWarnings("rawtypes")
+final class MapArg<K, V> extends AbstractArg<Map> implements Arg<Map> {
+
+	private final Class<K> keyType;
+	private final Class<V> valueType;
+	private final Map<K, V> values;
+
+	MapArg(String name, Class<K> keyType, Class<V> valueType) {
+		super(name, Map.class);
+		this.keyType = keyType;
+		this.valueType = valueType;
+		this.values = new HashMap<>();
+	}
+
+	public void setValue(String keyValue) throws IllegalArgumentException {
+		var pair = keyValue.split("=");
+		if (pair.length == 1) {
+			String message = "Map argument '%s' is no valid 'key=value' pair - it has no value.".formatted(keyValue);
+			throw new IllegalArgumentException(message);
+		} else if (pair.length > 2) {
+			String message = "Map argument '%s' is no valid 'key=value' pair - it has more than one equal sign.".formatted(keyValue);
+			throw new IllegalArgumentException(message);
+		}
+		var key = parseValueToType(pair[0], keyType);
+		var value = parseValueToType(pair[1], valueType);
+		this.values.put(key, value);
+	}
+
+	@Override
+	public Optional<Map> value() {
+		return Optional.of(Map.copyOf(values));
 	}
 
 }

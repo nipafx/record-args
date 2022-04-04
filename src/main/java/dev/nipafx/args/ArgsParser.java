@@ -2,6 +2,7 @@ package dev.nipafx.args;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -140,7 +141,7 @@ class ArgsParser {
 					unknownArgName -> new IgnoringValue(),
 					string -> {
 						setValue(currentArg, string);
-						return currentArg.type() == List.class
+						return currentArg.type() == List.class | currentArg.type() == Map.class
 								? new ExpectingNameOrAdditionalValue(currentArg)
 								: new ExpectingName();
 					});

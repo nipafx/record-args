@@ -71,6 +71,7 @@ Beyond that, the following container types are supported:
 
 * `Optional<VALUE>`, where `VALUE` is any of the simple types above  (but no `OptionalInt`, `OptionalLong`, `OptionalDouble`)
 * `List<VALUE>`, where `VALUE` is any of the simple types above
+* `Map<KEY, VALUE>`, where `KEY` and `VALUE` are any of the simple types above
 
 Container types are always optional.
 
@@ -121,3 +122,30 @@ java [...] --urls --createLog
 ```
 
 ... could be parsed to the empty list, this non-sensical command is instead interpreted as a mistake and leads to an exception.
+
+### Map arguments
+
+Arguments of type `Map` accept one or more key-value pair of the form `key=value`.
+If not mentioned, they are empty, which makes them optional as well.
+That means for the following arg record ...
+
+```java
+record ServerArgs(Map<Integer, String> numbers, boolean createLog) { }
+```
+
+... any of the following command lines are acceptable:
+
+```
+java [...] --createLog
+java [...] --createLog --numbers 1=one
+java [...] --createLog --numbers 1=one 2=two 3=three
+java [...] --numbers 1=one 2=two 3=three --createLog
+```
+
+While just mentioning a map argument without providing a value ...
+
+```
+java [...] --numbers --createLog
+```
+
+... could be parsed to the empty map, this non-sensical command is instead interpreted as a mistake and leads to an exception.
