@@ -153,3 +153,23 @@ java [...] --numbers --createLog
 ... could be parsed to the empty map, this non-sensical command is instead interpreted as a mistake and leads to an exception.
 
 Map instances are unmodifiable, just like those created with `Map::of`, `Map::ofEntries`, and `Map::copyOf`.
+
+## Parsing multiple args records
+
+It is possible to parse command line arguments to up to three args records with overloads of `Args::parse`.
+These overloads return instances of `Parsed2` or `Parsed3` that have accessors `first()`, `second()`, and maybe `third()` to access the parsed args record instances:
+
+```java
+// args records
+record LogArgs(int logLevel) { }
+record ServerArgs(String url, int port) { }
+
+// parsing arguments
+public static void main(String[] args) throws ArgsException {
+	Parsed2 parsed = Args.parse(args, LogArgs.class, ServerArgs.class);
+	LogArgs logArgs = parsed.first();
+	ServerArgs serverArgs = parsed.second();
+}
+```
+
+The records must not have components of the same name or `Args::parse` throws an `IllegalArgumentException`.

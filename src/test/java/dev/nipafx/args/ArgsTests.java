@@ -122,6 +122,17 @@ class ArgsTests {
 					.containsExactlyInAnyOrder(UNPARSEABLE_VALUE);
 		}
 
+		@Test
+		void multipleRecords_sameComponents_duplicateArgError() throws ArgsException {
+			String[] args = { };
+			var exception = assertThrows(
+					IllegalArgumentException.class, () -> Args.parse(args, WithMany.class, WithString.class));
+			assertThat(exception)
+					.hasMessageMatching("Duplicate arg.*stringArg.*")
+					.hasMessageContaining("WithMany")
+					.hasMessageContaining("WithString");
+		}
+
 	}
 
 	@Nested
@@ -338,6 +349,73 @@ class ArgsTests {
 			assertThat(parsed.floatArg()).isEqualTo(5.5f);
 			assertThat(parsed.booleanArg()).isTrue();
 			assertThat(parsed.numberArgs()).containsExactly(42, 63);
+		}
+
+	}
+
+	@Nested
+	class ParsingMultipleRecords {
+
+		@Test
+		void multipleArgsTwoRecords_correctValuesInOrder_parses() throws ArgsException {
+			String[] args = { "--stringArg", "string", "--pathArg", "/tmp" };
+			var parsed = Args.parse(args, WithString.class, WithPath.class);
+
+			assertThat(parsed.first().stringArg()).isEqualTo("string");
+			assertThat(parsed.second().pathArg()).isEqualTo(Path.of("/tmp"));
+		}
+
+		@Test
+		void multipleArgsTwoRecords_correctValuesOutOfOrder_parses() throws ArgsException {
+			String[] args = { "--pathArg", "/tmp", "--stringArg", "string" };
+			var parsed = Args.parse(args, WithString.class, WithPath.class);
+
+			assertThat(parsed.first().stringArg()).isEqualTo("string");
+			assertThat(parsed.second().pathArg()).isEqualTo(Path.of("/tmp"));
+		}
+
+		@Test
+		void multipleArgsThreeRecords_correctValuesInOrder_parses() throws ArgsException {
+			String[] args = {
+					"--intArg", "5", "--numberArgs", "42", "63", "--booleanArg", "--stringArg", "string", "--floatArg", "5.5",
+					"--longArg", "5921650832",
+					"--mapArgs", "1=one", "2=two", "3=three"
+			};
+			var parsed = Args.parse(args, WithMany.class, WithLong.class, WithMap.class);
+
+			assertThat(parsed.first().stringArg()).isEqualTo("string");
+			assertThat(parsed.first().pathArg()).isEmpty();
+			assertThat(parsed.first().intArg()).isEqualTo(5);
+			assertThat(parsed.first().floatArg()).isEqualTo(5.5f);
+			assertThat(parsed.first().booleanArg()).isTrue();
+			assertThat(parsed.first().numberArgs()).containsExactly(42, 63);
+			assertThat(parsed.second().longArg()).isEqualTo(5_921_650_832L);
+			assertThat(parsed.third().mapArgs()).isEqualTo(Map.of(
+					1, "one",
+					2, "two",
+					3, "three"));
+		}
+
+		@Test
+		void multipleArgsThreeRecords_correctValuesOutOfOrder_parses() throws ArgsException {
+			String[] args = {
+					 "--floatArg", "5.5", "--intArg", "5", "--numberArgs", "42", "63",
+					"--mapArgs", "1=one", "2=two", "3=three", "--booleanArg",
+					"--longArg", "5921650832", "--stringArg", "string",
+			};
+			var parsed = Args.parse(args, WithMany.class, WithLong.class, WithMap.class);
+
+			assertThat(parsed.first().stringArg()).isEqualTo("string");
+			assertThat(parsed.first().pathArg()).isEmpty();
+			assertThat(parsed.first().intArg()).isEqualTo(5);
+			assertThat(parsed.first().floatArg()).isEqualTo(5.5f);
+			assertThat(parsed.first().booleanArg()).isTrue();
+			assertThat(parsed.first().numberArgs()).containsExactly(42, 63);
+			assertThat(parsed.second().longArg()).isEqualTo(5_921_650_832L);
+			assertThat(parsed.third().mapArgs()).isEqualTo(Map.of(
+					1, "one",
+					2, "two",
+					3, "three"));
 		}
 
 	}

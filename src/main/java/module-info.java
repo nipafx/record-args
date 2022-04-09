@@ -9,7 +9,8 @@
  * package-private and open the package to this module, and call
  * {@link dev.nipafx.args.Args#parse(String[], Class) Args.parse(args, ArgsRecord.class)}</p>
  * to parse the string array {@code args} to an instance of your record ({@code ArgsRecord},
- * in this example).
+ * in this example). You can also parse to multiple args records by passing multiple type
+ * tokens to {@code Args::parse}.
  */
 module dev.nipafx.args {
 	exports dev.nipafx.args;

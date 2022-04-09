@@ -29,15 +29,18 @@ class ArgsParser {
 		this.state = new ExpectingName();
 	}
 
+	/**
+	 * @param args list of {@link Arg}s, which will be mutated according to the args string
+	 */
 	static ArgsParser forArgs(List<Arg<?>> args) {
 		return new ArgsParser(args);
 	}
 
-	public ParsedArgs parse(String[] argStrings) {
+	public ArgsMessages parse(String[] argStrings) {
 		for (String argString : argStrings)
 			state = state.transition(argString);
 		state.finish();
-		return new ParsedArgs(List.copyOf(args), List.copyOf(mutableErrors), List.copyOf(mutableWarnings));
+		return new ArgsMessages(List.copyOf(mutableErrors), List.copyOf(mutableWarnings));
 	}
 
 	/*

@@ -12,21 +12,29 @@ import static java.util.stream.Collectors.joining;
 public class ArgsException extends Exception {
 
 	private final String[] args;
-	private final Class<?> type;
+	private final List<Class<?>> types;
 	private final List<ArgsMessage> errors;
 
-	ArgsException(String[] args, Class<?> type, Collection<ArgsMessage> errors) {
+	ArgsException(String[] args, Collection<Class<?>> types, Collection<ArgsMessage> errors) {
 		super(combineErrors(errors));
 		this.args = nonNull(args);
-		this.type = nonNull(type);
+		this.types = List.copyOf(types);
 		this.errors = List.copyOf(errors);
 	}
 
-	ArgsException(String[] args, Class<?> type, Collection<ArgsMessage> errors, Throwable cause) {
+	ArgsException(String[] args, List<Class<?>> types, Collection<ArgsMessage> errors, Throwable cause) {
 		super(combineErrors(errors), cause);
 		this.args = nonNull(args);
-		this.type = nonNull(type);
+		this.types = List.copyOf(types);
 		this.errors = List.copyOf(errors);
+	}
+
+	ArgsException(String[] args, Class<?> type, Collection<ArgsMessage> errors) {
+		this(args, List.of(type), errors);
+	}
+
+	ArgsException(String[] args, Class<?> type, Collection<ArgsMessage> errors, Throwable cause) {
+		this(args, List.of(type), errors, cause);
 	}
 
 	private static String combineErrors(Collection<ArgsMessage> errors) {
@@ -43,10 +51,10 @@ public class ArgsException extends Exception {
 	}
 
 	/**
-	 * @return the type of the args record that was supposed to be created
+	 * @return the types of args records that were supposed to be created
 	 */
-	public Class<?> type() {
-		return type;
+	public List<Class<?>> types() {
+		return types;
 	}
 
 	/**

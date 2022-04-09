@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -14,6 +15,8 @@ import static dev.nipafx.args.Check.nonNull;
 
 /**
  * An argument as defined by an args record component, possibly holding a value.
+ *
+ * Two {@code Arg} instances are {@link Object#equals(Object) equal} if they have the same name.
  *
  * @param <T> the type of the component
  */
@@ -125,6 +128,17 @@ abstract class AbstractArg<T> {
 
 	public Class<T> type() {
 		return type;
+	}
+
+	@Override
+	public final boolean equals(Object other) {
+		return this == other
+				|| other instanceof Arg<?> arg && name.equals(arg.name());
+	}
+
+	@Override
+	public final int hashCode() {
+		return Objects.hash(name);
 	}
 
 }
