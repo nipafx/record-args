@@ -10,7 +10,7 @@ import static dev.nipafx.args.ArgsCode.MISSING_ARGUMENT;
 import static java.util.Arrays.stream;
 
 /**
- * Handles parsing the command-line arguments - call {@link Args#parse(String[], Class) parse}.
+ * Parses command-line arguments to an args record - call {@link Args#parse(String[], Class) parse}.
  */
 public class Args {
 

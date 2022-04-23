@@ -13,7 +13,7 @@ import java.util.Set;
 import static dev.nipafx.args.Check.nonNull;
 
 /**
- * An argument as defined by an arg record component, possibly holding a value.
+ * An argument as defined by an args record component, possibly holding a value.
  *
  * @param <T> the type of the component
  */
