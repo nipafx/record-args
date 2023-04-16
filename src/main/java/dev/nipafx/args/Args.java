@@ -16,8 +16,8 @@ import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toMap;
 
 /**
- * Parses command-line arguments to an args record - call {@link Args#parse(String[], Class) parse}
- * or one of its overloads (depending on how many args record types are involved).
+ * Parses command-line arguments to args types - call {@link Args#parse(String[], Class) parse}
+ * or one of its overloads (depending on how many args types are involved).
  */
 public class Args {
 
@@ -25,9 +25,9 @@ public class Args {
 	 * Parses the specified string array to create an instance of the specified type.
 	 */
 	@SuppressWarnings("unchecked")
-	public static <ARGS_RECORD extends Record> ARGS_RECORD parse(
-			String[] argStrings, Class<ARGS_RECORD> type) throws ArgsException {
-		RecordPackager<ARGS_RECORD> packager = records -> (ARGS_RECORD) records.get(type);
+	public static <ARGS_TYPE> ARGS_TYPE parse(
+			String[] argStrings, Class<ARGS_TYPE> type) throws ArgsException {
+		RecordPackager<ARGS_TYPE> packager = types -> (ARGS_TYPE) types.get(type);
 		return parse(argStrings, packager, type);
 	}
 
@@ -35,10 +35,10 @@ public class Args {
 	 * Parses the specified string array to create instances of the specified types.
 	 */
 	@SuppressWarnings("unchecked")
-	public static <ARGS_RECORD_1 extends Record, ARGS_RECORD_2 extends Record> Parsed2<ARGS_RECORD_1, ARGS_RECORD_2> parse(
-			String[] argStrings, Class<ARGS_RECORD_1> type1, Class<ARGS_RECORD_2> type2) throws ArgsException {
-		RecordPackager<Parsed2<ARGS_RECORD_1, ARGS_RECORD_2>> packager = records
-				-> new Parsed2<>((ARGS_RECORD_1) records.get(type1), (ARGS_RECORD_2) records.get(type2));
+	public static <ARGS_TYPE_1, ARGS_TYPE_2> Parsed2<ARGS_TYPE_1, ARGS_TYPE_2> parse(
+			String[] argStrings, Class<ARGS_TYPE_1> type1, Class<ARGS_TYPE_2> type2) throws ArgsException {
+		RecordPackager<Parsed2<ARGS_TYPE_1, ARGS_TYPE_2>> packager = types
+				-> new Parsed2<>((ARGS_TYPE_1) types.get(type1), (ARGS_TYPE_2) types.get(type2));
 		return parse(argStrings, packager, type1, type2);
 	}
 
@@ -46,37 +46,47 @@ public class Args {
 	 * Parses the specified string array to create instances of the specified types.
 	 */
 	@SuppressWarnings("unchecked")
-	public static <ARGS_RECORD_1 extends Record, ARGS_RECORD_2 extends Record, ARGS_RECORD_3 extends Record> Parsed3<ARGS_RECORD_1, ARGS_RECORD_2, ARGS_RECORD_3> parse(
-			String[] argStrings, Class<ARGS_RECORD_1> type1, Class<ARGS_RECORD_2> type2, Class<ARGS_RECORD_3> type3) throws ArgsException {
-		RecordPackager<Parsed3<ARGS_RECORD_1, ARGS_RECORD_2, ARGS_RECORD_3>> packager = records
-				-> new Parsed3<>((ARGS_RECORD_1) records.get(type1), (ARGS_RECORD_2) records.get(type2), (ARGS_RECORD_3) records.get(type3));
+	public static <ARGS_TYPE_1, ARGS_TYPE_2, ARGS_TYPE_3> Parsed3<ARGS_TYPE_1, ARGS_TYPE_2, ARGS_TYPE_3> parse(
+			String[] argStrings, Class<ARGS_TYPE_1> type1, Class<ARGS_TYPE_2> type2, Class<ARGS_TYPE_3> type3) throws ArgsException {
+		RecordPackager<Parsed3<ARGS_TYPE_1, ARGS_TYPE_2, ARGS_TYPE_3>> packager = types
+				-> new Parsed3<>((ARGS_TYPE_1) types.get(type1), (ARGS_TYPE_2) types.get(type2), (ARGS_TYPE_3) types.get(type3));
 		return parse(argStrings, packager, type1, type2, type3);
 	}
 
-	private interface RecordPackager<T> extends Function<Map<Class<? extends Record>, Record>, T> { }
-
-	@SafeVarargs
-	private static <T> T parse(String[] argStrings, RecordPackager<T> packager, Class<? extends Record>... types)
+	private static <T> T parse(String[] argStrings, RecordPackager<T> packager, Class<?>... types)
 			throws ArgsException {
-		var args = inferArgs(types);
+		var argsAndTypes = determineArgsAndTypes(argStrings, types);
+		var args = inferArgs(argsAndTypes.types());
 		var messages = ArgsParser
 				.forArgs(args.all().toList())
-				.parse(argStrings);
-		throwOnErrors(messages.errors(), messages.warnings(), argStrings, types);
+				.parse(argsAndTypes.argsStrings());
+		throwOnErrors(messages.errors(), messages.warnings(), argStrings, List.of(types));
 
 		var constructorArguments = prepareConstructions(args);
 		var constructorErrors = constructorArguments.stream()
 						.flatMap(constrArg -> constrArg.errors.stream())
 						.toList();
-		throwOnErrors(constructorErrors, List.of(), argStrings, types);
+		throwOnErrors(constructorErrors, List.of(), argStrings, List.of(types));
 
 		var records = constructArgTypes(argStrings, constructorArguments);
 		return packager.apply(records);
 	}
 
-	@SafeVarargs
-	private static InferredArgs inferArgs(Class<? extends Record>... types) {
-		Map<Class<? extends Record>, List<Arg<?>>> argsByType = stream(types)
+	private static ArgsAndTypes determineArgsAndTypes(String[] argStrings, Class<?>[] types) {
+		@SuppressWarnings("unchecked")
+		var recordTypes = stream(types)
+				.<Class<? extends Record>> map(type -> {
+					if (type.isRecord())
+						return (Class<? extends Record>) type;
+					else
+						throw new IllegalArgumentException("Types must be records, but '%s' isn't.".formatted(type));
+				})
+				.toList();
+		return new ArgsAndTypes(List.of(argStrings), recordTypes);
+	}
+
+	private static InferredArgs inferArgs(List<Class<? extends Record>> types) {
+		Map<Class<? extends Record>, List<Arg<?>>> argsByType = types.stream()
 				.map(type -> Map.entry(
 						type,
 						stream(type.getRecordComponents())
@@ -143,44 +153,47 @@ public class Args {
 	}
 
 	private static Map<Class<? extends Record>, Record> constructArgTypes(
-			String[] argStrings, List<ConstructorArguments> constructors) throws ArgsException {
+			String[] argStringsForError, List<ConstructorArguments> constructors) throws ArgsException {
 		var argTypes = new HashMap<Class<? extends Record>, Record>();
 		for (var constr : constructors) {
-			var argType = constructArgType(argStrings, constr.argType(), constr.parameters(), constr.arguments());
+			var argType = constructArgType(argStringsForError, constr.argType(), constr.parameters(), constr.arguments());
 			argTypes.put(constr.argType(), argType);
 		}
 		return argTypes;
 	}
 
 	private static <T extends Record> T constructArgType(
-			String[] argStrings, Class<T> type, Class<?>[] parameters, Object[] arguments) throws ArgsException {
+			String[] argStringsForError, Class<T> type, Class<?>[] parameters, Object[] arguments) throws ArgsException {
 		try {
 			Constructor<T> canonicalConstructor = type.getDeclaredConstructor(parameters);
 			canonicalConstructor.setAccessible(true);
 			return canonicalConstructor.newInstance(arguments);
 		} catch (IllegalAccessException ex) {
 			String message = "Make sure Args has reflective access to the argument record, e.g. with an `opens ... to ...` directive.";
-			throw new ArgsException(argStrings, type, List.of(new ArgsMessage(ILLEGAL_ACCESS, message)), ex);
+			throw new ArgsException(argStringsForError, type, List.of(new ArgsMessage(ILLEGAL_ACCESS, message)), ex);
 		} catch (ReflectiveOperationException ex) {
 			String message = "There was an unexpected error while creating the argument record.";
-			throw new ArgsException(argStrings, type, List.of(new ArgsMessage(ILLEGAL_ACCESS, message)), ex);
+			throw new ArgsException(argStringsForError, type, List.of(new ArgsMessage(ILLEGAL_ACCESS, message)), ex);
 		}
 	}
 
-	@SafeVarargs
 	private static void throwOnErrors(
-			List<ArgsMessage> errors, List<ArgsMessage> warnings, String[] argStrings, Class<? extends Record>... types) throws ArgsException {
+			List<ArgsMessage> errors, List<ArgsMessage> warnings, String[] argStringsForError, List<Class<?>> typesForError) throws ArgsException {
 		if (errors.isEmpty() && warnings.isEmpty())
 			return;
 
 		List<ArgsMessage> messages = new ArrayList<>(errors);
 		messages.addAll(warnings);
-		throw new ArgsException(argStrings, List.of(types), messages);
+		throw new ArgsException(argStringsForError, typesForError, messages);
 	}
 
 	/*
 	 * INNER TYPES
 	 */
+
+	private interface RecordPackager<T> extends Function<Map<Class<? extends Record>, Record>, T> { }
+
+	private record ArgsAndTypes(List<String> argsStrings, List<Class<? extends Record>> types) { }
 
 	private record ConstructorArguments(
 			Class<? extends Record> argType, Class<?>[] parameters, Object[] arguments, List<ArgsMessage> errors) { }

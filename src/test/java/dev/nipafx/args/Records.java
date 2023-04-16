@@ -29,4 +29,6 @@ class Records {
 			int intArg, float floatArg, boolean booleanArg,
 			List<Integer> numberArgs) { }
 
+	static class Class { }
+
 }

@@ -36,7 +36,7 @@ class ArgsParser {
 		return new ArgsParser(args);
 	}
 
-	public ArgsMessages parse(String[] argStrings) {
+	public ArgsMessages parse(List<String> argStrings) {
 		for (String argString : argStrings)
 			state = state.transition(argString);
 		state.finish();

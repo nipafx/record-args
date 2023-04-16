@@ -12,17 +12,17 @@ import static java.util.stream.Collectors.joining;
 public class ArgsException extends Exception {
 
 	private final String[] args;
-	private final List<Class<?>> types;
-	private final List<ArgsMessage> errors;
+	private final List<? extends Class<?>> types;
+	private final List<? extends ArgsMessage> errors;
 
-	ArgsException(String[] args, Collection<Class<?>> types, Collection<ArgsMessage> errors) {
+	ArgsException(String[] args, Collection<? extends Class<?>> types, Collection<ArgsMessage> errors) {
 		super(combineErrors(errors));
 		this.args = nonNull(args);
 		this.types = List.copyOf(types);
 		this.errors = List.copyOf(errors);
 	}
 
-	ArgsException(String[] args, List<Class<?>> types, Collection<ArgsMessage> errors, Throwable cause) {
+	ArgsException(String[] args, Collection<? extends Class<?>> types, Collection<ArgsMessage> errors, Throwable cause) {
 		super(combineErrors(errors), cause);
 		this.args = nonNull(args);
 		this.types = List.copyOf(types);
@@ -51,16 +51,16 @@ public class ArgsException extends Exception {
 	}
 
 	/**
-	 * @return the types of args records that were supposed to be created
+	 * @return the args types that were supposed to be created
 	 */
-	public List<Class<?>> types() {
+	public List<? extends Class<?>> types() {
 		return types;
 	}
 
 	/**
 	 * @return unmodifiable list of {@link ArgsMessage}s
 	 */
-	public List<ArgsMessage> errors() {
+	public List<? extends ArgsMessage> errors() {
 		return errors;
 	}
 

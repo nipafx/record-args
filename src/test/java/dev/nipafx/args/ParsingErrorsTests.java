@@ -1,5 +1,6 @@
 package dev.nipafx.args;
 
+import dev.nipafx.args.Records.Class;
 import dev.nipafx.args.Records.None;
 import dev.nipafx.args.Records.WithBoolean;
 import dev.nipafx.args.Records.WithInteger;
@@ -21,6 +22,16 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Nested
 class ParsingErrorsTests {
+
+	@Test
+	void parseToClass_noRecordError()  {
+		String[] args = { };
+		var exception = assertThrows(
+				IllegalArgumentException.class, () -> Args.parse(args, Class.class));
+		assertThat(exception)
+				.hasMessageMatching("Types must be records.*")
+				.hasMessageContaining(Class.class.getSimpleName());
+	}
 
 	@Test
 	void withoutArgs_expectedProgramArgs_missingArgumentError() {

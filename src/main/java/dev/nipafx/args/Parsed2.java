@@ -1,13 +1,13 @@
 package dev.nipafx.args;
 
 /**
- * Result of parsing arguments to two args records with {@link Args#parse(String[], Class, Class)}.
+ * Result of parsing arguments to two args types with {@link Args#parse(String[], Class, Class)}.
  *
- * @param first instance of the first args record type passed to {@code Args::parse}
- * @param second instance of the second args record type passed to {@code Args::parse}
- * @param <ARGS_RECORD_1> first args record type passed to {@code Args::parse}
- * @param <ARGS_RECORD_2> second args record type passed to {@code Args::parse}
+ * @param first instance of the first args type passed to {@code Args::parse}
+ * @param second instance of the second args type passed to {@code Args::parse}
+ * @param <ARGS_TYPE_1> first args type passed to {@code Args::parse}
+ * @param <ARGS_TYPE_2> second args type passed to {@code Args::parse}
  */
-public record Parsed2<ARGS_RECORD_1 extends Record, ARGS_RECORD_2 extends Record>(
-		ARGS_RECORD_1 first,
-		ARGS_RECORD_2 second) { }
+public record Parsed2<ARGS_TYPE_1, ARGS_TYPE_2>(
+		ARGS_TYPE_1 first,
+		ARGS_TYPE_2 second) { }
