@@ -9,9 +9,9 @@ import static dev.nipafx.args.Check.internalErrorOnNull;
  *
  * @param code the warning/error code for this message
  * @param message a textual description of the warning/error
- * @param cause the {@link Exception} that caused the error (if available)
+ * @param cause the {@link Throwable} that caused the error (if available)
  */
-public record ArgsMessage(ArgsParseErrorCode code, String message, Optional<Exception> cause) {
+public record ArgsMessage(ArgsParseErrorCode code, String message, Optional<Throwable> cause) {
 
 	public ArgsMessage {
 		internalErrorOnNull(code);
@@ -23,7 +23,7 @@ public record ArgsMessage(ArgsParseErrorCode code, String message, Optional<Exce
 		this(code, message, Optional.empty());
 	}
 
-	ArgsMessage(ArgsParseErrorCode code, String message, Exception cause) {
+	ArgsMessage(ArgsParseErrorCode code, String message, Throwable cause) {
 		this(code, message, Optional.of(cause));
 	}
 

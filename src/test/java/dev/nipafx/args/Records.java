@@ -23,6 +23,24 @@ class Records {
 	record WithMap(Map<Integer, String> mapArgs) implements Type { }
 	record WithMapAndMore(Map<Integer, String> mapArgs, boolean booleanArg) { }
 
+	record WithConstructorException() {
+
+		WithConstructorException {
+			throw new IllegalArgumentException();
+		}
+
+	}
+
+	record WithInitializerException() {
+
+		static {
+			//noinspection ConstantValue
+			if (true)
+				throw new IllegalArgumentException();
+		}
+
+	}
+
 	record WithStringArray(String[] stringsArg) { }
 	record WithMany(
 			String stringArg, Optional<Path> pathArg,

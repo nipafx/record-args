@@ -2,6 +2,7 @@ package dev.nipafx.args;
 
 import dev.nipafx.args.Records.Class;
 import dev.nipafx.args.Records.Interface;
+import dev.nipafx.args.Records.WithInitializerException;
 import dev.nipafx.args.Records.WithMany;
 import dev.nipafx.args.Records.WithString;
 import dev.nipafx.args.Records.WithStringArray;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static dev.nipafx.args.ArgsDefinitionErrorCode.DUPLICATE_ARGUMENT_DEFINITION;
+import static dev.nipafx.args.ArgsDefinitionErrorCode.FAULTY_INITIALIZER;
 import static dev.nipafx.args.ArgsDefinitionErrorCode.ILL_DEFINED_ARGS_TYPE;
 import static dev.nipafx.args.ArgsDefinitionErrorCode.UNSUPPORTED_ARGUMENT_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,14 +20,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class DefinitionErrorsTests {
 
 	@Test
-	void parseToClass_noRecordError()  {
+	void parseToClass_noRecordError() {
 		String[] args = { };
 		var exception = assertThrows(ArgsDefinitionException.class, () -> Args.parse(args, Class.class));
 		assertThat(exception.errorCode()).isEqualTo(ILL_DEFINED_ARGS_TYPE);
 	}
 
 	@Test
-	void parseToInterface_noRecordError()  {
+	void parseToInterface_noRecordError() {
 		String[] args = { };
 		var exception = assertThrows(ArgsDefinitionException.class, () -> Args.parse(args, Interface.class));
 		assertThat(exception.errorCode()).isEqualTo(ILL_DEFINED_ARGS_TYPE);
@@ -43,6 +45,13 @@ class DefinitionErrorsTests {
 		String[] args = { "--stringsArg", "{ one, two, three }" };
 		var exception = assertThrows(ArgsDefinitionException.class, () -> Args.parse(args, WithStringArray.class));
 		assertThat(exception.errorCode()).isEqualTo(UNSUPPORTED_ARGUMENT_TYPE);
+	}
+
+	@Test
+	void constructorThrowsException_constructorError() {
+		String[] args = { };
+		var exception = assertThrows(ArgsDefinitionException.class, () -> Args.parse(args, WithInitializerException.class));
+		assertThat(exception.errorCode()).isEqualTo(FAULTY_INITIALIZER);
 	}
 
 }

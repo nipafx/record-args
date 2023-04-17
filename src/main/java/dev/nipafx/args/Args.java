@@ -1,18 +1,25 @@
 package dev.nipafx.args;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InaccessibleObjectException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.RecordComponent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static dev.nipafx.args.ArgsDefinitionErrorCode.DUPLICATE_ARGUMENT_DEFINITION;
+import static dev.nipafx.args.ArgsDefinitionErrorCode.FAULTY_INITIALIZER;
 import static dev.nipafx.args.ArgsDefinitionErrorCode.ILLEGAL_ACCESS;
+import static dev.nipafx.args.ArgsParseErrorCode.CONSTRUCTOR_EXCEPTION;
 import static dev.nipafx.args.ArgsParseErrorCode.MISSING_ARGUMENT;
+import static dev.nipafx.args.Check.internalErrorOnNull;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toMap;
 
@@ -93,7 +100,7 @@ public class Args {
 	private static <T> T parse(String[] argStrings, RecordPackager<T> packager, Class<?>... types) throws ArgsParseException {
 		try {
 			var argsAndTypes = new ArgsFilter().processModes(argStrings, types);
-			throwOnErrors(argsAndTypes.errors(), List.of());
+			throwOnErrors(argsAndTypes.errors());
 
 			var args = inferArgs(argsAndTypes.types());
 			var messages = ArgsParser
@@ -105,10 +112,12 @@ public class Args {
 			var constructorErrors = constructorArguments.stream()
 					.flatMap(constrArg -> constrArg.errors.stream())
 					.toList();
-			throwOnErrors(constructorErrors, List.of());
+			throwOnErrors(constructorErrors);
 
-			var records = constructArgTypes(constructorArguments);
-			return packager.apply(records);
+			var constructions = constructArgTypes(constructorArguments);
+			throwOnErrors(constructions.errors());
+
+			return packager.apply(constructions.argInstances());
 		} catch (InternalArgsException ex) {
 			throw new ArgsParseException(argStrings, List.of(types), ex);
 		}
@@ -181,27 +190,51 @@ public class Args {
 		return new ConstructorArguments(type, parameters, arguments, errors);
 	}
 
-	private static Map<Class<? extends Record>, Record> constructArgTypes(List<ConstructorArguments> constructors) {
-		var argTypes = new HashMap<Class<? extends Record>, Record>();
+	private static Constructions constructArgTypes(List<ConstructorArguments> constructors) {
+		var argInstances = new HashMap<Class<? extends Record>, Record>();
+		var errors = new ArrayList<ArgsMessage>();
 		for (var constr : constructors) {
-			var argType = constructArgType(constr.argType(), constr.parameters(), constr.arguments());
-			argTypes.put(constr.argType(), argType);
+			var construction = constructArgType(constr.argType(), constr.parameters(), constr.arguments());
+			construction.instance().ifPresent(argInstance -> argInstances.put(constr.argType(), argInstance));
+			errors.addAll(construction.errors());
 		}
-		return argTypes;
+		return new Constructions(argInstances, errors);
 	}
 
-	private static <T extends Record> T constructArgType(Class<T> type, Class<?>[] parameters, Object[] arguments) {
+	private static <T extends Record> Construction<T> constructArgType(Class<T> type, Class<?>[] parameters, Object[] arguments) {
 		try {
 			Constructor<T> canonicalConstructor = type.getDeclaredConstructor(parameters);
 			canonicalConstructor.setAccessible(true);
-			return canonicalConstructor.newInstance(arguments);
-		} catch (IllegalAccessException ex) {
-			String message = "Make sure Args has reflective access to the argument record, e.g. with an `opens ... to ...` directive.";
-			throw new ArgsDefinitionException(ILLEGAL_ACCESS, message, ex);
-		} catch (ReflectiveOperationException ex) {
-			String message = "There was an unexpected reflection error while creating the argument record.";
+			return Construction.successful(canonicalConstructor.newInstance(arguments));
+		// errors that should've been avoided by RecordArgs (i.e. likely bugs)
+		} catch (NoSuchMethodException ex) {
+			var message = "The canonical constructor for %s could not be found - presumably it has these parameters: %s"
+					.formatted(type, Arrays.toString(parameters));
 			throw new IllegalStateException(message, ex);
+		} catch (IllegalArgumentException ex) {
+			var message = "Could not invoke the canonical constructor for %s with these arguments: %s"
+					.formatted(type, Arrays.toString(arguments));
+			throw new IllegalStateException(message, ex);
+		} catch (InstantiationException ex) {
+			var message = "Apparently, %s is abstract, which should've been caught earlier.".formatted(type);
+			throw new IllegalStateException(message, ex);
+		// errors that should've been avoided by the caller
+		} catch (InaccessibleObjectException | IllegalAccessException ex) {
+			var message = "Make sure Args has reflective access to the argument record %s, e.g. with an `opens ... to ...` directive."
+					.formatted(type);
+			throw new ArgsDefinitionException(ILLEGAL_ACCESS, message, ex);
+		} catch (ExceptionInInitializerError ex) {
+			var message = "Invoking the constructor of %s caused an exception in the initializer.".formatted(type);
+			throw new ArgsDefinitionException(FAULTY_INITIALIZER, message, ex);
+		// errors from faulty arguments
+		} catch (InvocationTargetException ex) {
+			var message = "The constructor of %s threw an exception.".formatted(type);
+			return Construction.failed(new ArgsMessage(CONSTRUCTOR_EXCEPTION, message, ex.getTargetException()));
 		}
+	}
+
+	private static void throwOnErrors(List<ArgsMessage> errors) {
+		throwOnErrors(errors, List.of());
 	}
 
 	private static void throwOnErrors(List<ArgsMessage> errors, List<ArgsMessage> warnings) {
@@ -250,6 +283,34 @@ public class Args {
 
 		public Stream<Entry<Class<? extends Record>, List<Arg<?>>>> allByType() {
 			return argsByType.entrySet().stream();
+		}
+
+	}
+
+	private record Construction<T extends Record>(Optional<T> instance, List<ArgsMessage> errors) {
+
+		private Construction {
+			internalErrorOnNull(instance);
+			errors = List.copyOf(internalErrorOnNull(errors));
+			if (instance.isEmpty() && errors.isEmpty())
+				throw new IllegalStateException("Construction yielded neither instance nor errors.");
+		}
+
+		public static <T extends Record> Construction<T> successful(T instance) {
+			return new Construction<>(Optional.of(internalErrorOnNull(instance)), List.of());
+		}
+
+		public static <T extends Record> Construction<T> failed(ArgsMessage... errors) {
+			return new Construction<>(Optional.empty(), List.of(errors));
+		}
+
+	}
+
+	private record Constructions(Map<Class<? extends Record>, Record> argInstances, List<ArgsMessage> errors) {
+
+		Constructions {
+			argInstances = Map.copyOf(internalErrorOnNull(argInstances));
+			errors = List.copyOf(internalErrorOnNull(errors));
 		}
 
 	}

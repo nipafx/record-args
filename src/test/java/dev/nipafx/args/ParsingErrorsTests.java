@@ -4,6 +4,7 @@ import dev.nipafx.args.Records.Class;
 import dev.nipafx.args.Records.Interface;
 import dev.nipafx.args.Records.None;
 import dev.nipafx.args.Records.WithBoolean;
+import dev.nipafx.args.Records.WithConstructorException;
 import dev.nipafx.args.Records.WithInteger;
 import dev.nipafx.args.Records.WithList;
 import dev.nipafx.args.Records.WithMany;
@@ -13,6 +14,7 @@ import dev.nipafx.args.Records.WithStringArray;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import static dev.nipafx.args.ArgsParseErrorCode.CONSTRUCTOR_EXCEPTION;
 import static dev.nipafx.args.ArgsParseErrorCode.MISSING_ARGUMENT;
 import static dev.nipafx.args.ArgsParseErrorCode.MISSING_VALUE;
 import static dev.nipafx.args.ArgsParseErrorCode.UNEXPECTED_VALUE;
@@ -113,6 +115,15 @@ class ParsingErrorsTests {
 		assertThat(exception.errors())
 				.map(ArgsMessage::code)
 				.containsExactlyInAnyOrder(UNPARSEABLE_VALUE);
+	}
+
+	@Test
+	void constructorThrowsException_constructorError() {
+		String[] args = { };
+		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, WithConstructorException.class));
+		assertThat(exception.errors())
+				.map(ArgsMessage::code)
+				.containsExactlyInAnyOrder(CONSTRUCTOR_EXCEPTION);
 	}
 
 }
