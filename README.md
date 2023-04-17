@@ -190,7 +190,7 @@ record Client(int port) implements Mode { }
 record Server(String url, int port) implements Mode { }
 ```
 
-When such an interface is passed to `parse` an argument with its name and a value that is one of the implementing records' names (always first letter in lower case, e.g. `--mode client`) is used to determine which args record to fill and instantiate (this is called _mode selection_).
+When such an interface is passed to `parse` an argument with its name and a value that is one of the implementing records' names (always first letter in lower case, e.g. `--mode client`, and without a potential `Args` suffix - more on that below) is used to determine which args record to fill and instantiate (this is called _mode selection_).
 That means the command line ...
 
 ```
@@ -205,8 +205,8 @@ public static void main(String[] args) throws ArgsParseException{
 
 	switch(arguments) {
 		// this path is taken
-		case Client configArgs -> spawnClient(configArgs);
-		case Server configArgs -> spawnServer(configArgs);
+		case Client config -> spawnClient(config);
+		case Server config -> spawnServer(config);
 	}
 }
 ```
@@ -236,10 +236,29 @@ public static void main(String[] args) throws ArgsParseException {
 }
 ```
 
+When exclusively dealing with args records, the names of the arguments are determined solely by component names.
+But as described above, when using modes (and/or actions - see below), the _type_ names determine some argument names and values.
+To offer a degree of freedom when finding names that suit the types within the application as well as the argument on the command line, a type name suffix of `Args` is ignored and hence not included in the argument created for the type:
+
+```java
+// maps to `--mode`
+sealed interface ModeArgs permits Client, Server { }
+// maps to `client`
+record ClientArgs(int port) implements Mode { }
+// maps to `server`
+record ServerArgs(String url, int port) implements Mode { }
+
+// java [...] --mode server --port 8080 --url localhost
+public static void main(String[] args) throws ArgsParseException {
+	// successfully parsed
+	var arguments = Args.parse(args, ModeArgs.class);
+}
+```
+
 ### Actions
 
 An _action_ is a special mode where the selection is not done by a pair of arguments (e.g. `... --mode client ...`) but by having just the value as the first argument in the array (e.g. `client ...`).
-This interpretation is automatically and exclusively applied to interfaces with the simple name `Action`, e.g.:
+This interpretation is automatically and exclusively applied to interfaces with the simple name `Action` or `ActionArgs`, e.g.:
 
 ```java
 sealed interface Action permits Create, Copy, Move { }

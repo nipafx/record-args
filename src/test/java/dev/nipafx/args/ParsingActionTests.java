@@ -1,9 +1,11 @@
 package dev.nipafx.args;
 
 import dev.nipafx.args.Records.Action;
+import dev.nipafx.args.Records.ActionArgs;
 import dev.nipafx.args.Records.Mode;
 import dev.nipafx.args.Records.WithInteger;
 import dev.nipafx.args.Records.WithPath;
+import dev.nipafx.args.Records.WithPathArgs;
 import dev.nipafx.args.Records.WithString;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -62,6 +64,16 @@ class ParsingActionTests {
 		assertThat(parsed).isInstanceOf(WithInteger.class);
 		var withString = (WithInteger) parsed;
 		assertThat(withString.intArg()).isEqualTo(42);
+	}
+
+	@Test
+	void actionWithArgsName_correctSelectionAndValuesInOrder_parses() throws ArgsParseException {
+		String[] args = { "withPath", "--pathArg", "/tmp" };
+		var parsed = Args.parse(args, ActionArgs.class);
+
+		assertThat(parsed).isInstanceOf(WithPathArgs.class);
+		var withPath = (WithPathArgs) parsed;
+		assertThat(withPath.pathArg()).isEqualTo(Path.of("/tmp"));
 	}
 
 	@Test

@@ -2,11 +2,13 @@ package dev.nipafx.args;
 
 import dev.nipafx.args.Records.AnotherWithString;
 import dev.nipafx.args.Records.Mode;
+import dev.nipafx.args.Records.ModeArgs;
 import dev.nipafx.args.Records.SubtypesWithOverlappingComponents;
 import dev.nipafx.args.Records.Type;
 import dev.nipafx.args.Records.WithInteger;
 import dev.nipafx.args.Records.WithMap;
 import dev.nipafx.args.Records.WithString;
+import dev.nipafx.args.Records.WithStringArgs;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -55,6 +57,16 @@ class ParsingModesTests {
 
 		assertThat(parsed).isInstanceOf(WithString.class);
 		var withString = (WithString) parsed;
+		assertThat(withString.stringArg()).isEqualTo("string");
+	}
+
+	@Test
+	void singleModeWithArgsName_correctSelectionAndValuesInOrder_parses() throws ArgsParseException {
+		String[] args = { "--mode", "withString", "--stringArg", "string" };
+		var parsed = Args.parse(args, ModeArgs.class);
+
+		assertThat(parsed).isInstanceOf(WithStringArgs.class);
+		var withString = (WithStringArgs) parsed;
 		assertThat(withString.stringArg()).isEqualTo("string");
 	}
 

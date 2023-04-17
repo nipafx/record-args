@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import static dev.nipafx.args.ArgsDefinitionErrorCode.ILL_DEFINED_ARGS_TYPE;
 import static dev.nipafx.args.ArgsParseErrorCode.FAULTY_ACTION;
@@ -15,13 +16,13 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toMap;
 
-class ArgsFilter {
+class ArgsModeFilter {
 
 	private final List<String> argList;
 	private final List<ArgsMessage> errors;
 	private final List<Class<? extends Record>> recordTypes;
 
-	public ArgsFilter() {
+	public ArgsModeFilter() {
 		this.argList = new ArrayList<>();
 		this.errors = new ArrayList<>();
 		this.recordTypes = new ArrayList<>();
@@ -58,7 +59,7 @@ class ArgsFilter {
 	}
 
 	private void processSealedInterface(Class<?> type) {
-		if (type.getSimpleName().equals("Action"))
+		if (Set.of("Action", "ActionArgs").contains(type.getSimpleName()))
 			processAction(type);
 		else
 			processMode(type);
@@ -89,7 +90,7 @@ class ArgsFilter {
 
 	private void processMode(Class<?> type) {
 		// create names of argument and values
-		var argumentName = "--" + lowerCaseFirstLetter(type);
+		var argumentName = "--" + createArgumentName(type);
 		var valueTypesByName = createValuesByTypeName(type);
 
 		// detect and remove arguments
@@ -130,11 +131,15 @@ class ArgsFilter {
 						throw new ArgsDefinitionException(ILL_DEFINED_ARGS_TYPE, message.formatted(subtype));
 					}
 				})
-				.collect(toMap(ArgsFilter::lowerCaseFirstLetter, identity()));
+				.collect(toMap(ArgsModeFilter::createArgumentName, identity()));
 	}
 
-	private static String lowerCaseFirstLetter(Class<?> type) {
-		return type.getSimpleName().substring(0, 1).toLowerCase(Locale.US) + type.getSimpleName().substring(1);
+	private static String createArgumentName(Class<?> type) {
+		var originalName = type.getSimpleName();
+		var argsLessName = originalName.endsWith("Args")
+				? originalName.substring(0, originalName.length() - 4)
+				: originalName;
+		return argsLessName.substring(0, 1).toLowerCase(Locale.US) + argsLessName.substring(1);
 	}
 
 }

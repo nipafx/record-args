@@ -99,7 +99,7 @@ public class Args {
 
 	private static <T> T parse(String[] argStrings, RecordPackager<T> packager, Class<?>... types) throws ArgsParseException {
 		try {
-			var argsAndTypes = new ArgsFilter().processModes(argStrings, types);
+			var argsAndTypes = new ArgsModeFilter().processModes(argStrings, types);
 			throwOnErrors(argsAndTypes.errors());
 
 			var args = inferArgs(argsAndTypes.types());
