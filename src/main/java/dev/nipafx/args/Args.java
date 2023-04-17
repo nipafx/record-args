@@ -10,7 +10,6 @@ import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static dev.nipafx.args.ArgsCode.ILLEGAL_ACCESS;
 import static dev.nipafx.args.ArgsCode.MISSING_ARGUMENT;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toMap;
@@ -44,7 +43,6 @@ public class Args {
 	/**
 	 * Parses the specified string array to create instances of the specified types.
 	 */
-	@SuppressWarnings("unchecked")
 	public static <ARGS_TYPE_1, ARGS_TYPE_2, ARGS_TYPE_3> Parsed3<ARGS_TYPE_1, ARGS_TYPE_2, ARGS_TYPE_3> parse(
 			String[] argStrings, Class<ARGS_TYPE_1> type1, Class<ARGS_TYPE_2> type2, Class<ARGS_TYPE_3> type3) throws ArgsException {
 		RecordPackager<Parsed3<ARGS_TYPE_1, ARGS_TYPE_2, ARGS_TYPE_3>> packager = types -> new Parsed3<>(
@@ -54,25 +52,28 @@ public class Args {
 		return parse(argStrings, packager, type1, type2, type3);
 	}
 
-	private static <T> T parse(String[] argStrings, RecordPackager<T> packager, Class<?>... types)
-			throws ArgsException {
-		var argsAndTypes = new ArgsFilter().processModes(argStrings, types);
-		throwOnErrors(argsAndTypes.errors(), List.of(), argStrings, List.of(types));
+	private static <T> T parse(String[] argStrings, RecordPackager<T> packager, Class<?>... types) throws ArgsException {
+		try {
+			var argsAndTypes = new ArgsFilter().processModes(argStrings, types);
+			throwOnErrors(argsAndTypes.errors(), List.of());
 
-		var args = inferArgs(argsAndTypes.types());
-		var messages = ArgsParser
-				.forArgs(args.all().toList())
-				.parse(argsAndTypes.argsStrings());
-		throwOnErrors(messages.errors(), messages.warnings(), argStrings, List.of(types));
+			var args = inferArgs(argsAndTypes.types());
+			var messages = ArgsParser
+					.forArgs(args.all().toList())
+					.parse(argsAndTypes.argsStrings());
+			throwOnErrors(messages.errors(), messages.warnings());
 
-		var constructorArguments = prepareConstructions(args);
-		var constructorErrors = constructorArguments.stream()
-						.flatMap(constrArg -> constrArg.errors.stream())
-						.toList();
-		throwOnErrors(constructorErrors, List.of(), argStrings, List.of(types));
+			var constructorArguments = prepareConstructions(args);
+			var constructorErrors = constructorArguments.stream()
+					.flatMap(constrArg -> constrArg.errors.stream())
+					.toList();
+			throwOnErrors(constructorErrors, List.of());
 
-		var records = constructArgTypes(argStrings, constructorArguments);
-		return packager.apply(records);
+			var records = constructArgTypes(constructorArguments);
+			return packager.apply(records);
+		} catch (InternalArgsException ex) {
+			throw new ArgsException(argStrings, List.of(types), ex);
+		}
 	}
 
 	private static InferredArgs inferArgs(List<Class<? extends Record>> types) {
@@ -142,39 +143,36 @@ public class Args {
 		return new ConstructorArguments(type, parameters, arguments, errors);
 	}
 
-	private static Map<Class<? extends Record>, Record> constructArgTypes(
-			String[] argStringsForError, List<ConstructorArguments> constructors) throws ArgsException {
+	private static Map<Class<? extends Record>, Record> constructArgTypes(List<ConstructorArguments> constructors) {
 		var argTypes = new HashMap<Class<? extends Record>, Record>();
 		for (var constr : constructors) {
-			var argType = constructArgType(argStringsForError, constr.argType(), constr.parameters(), constr.arguments());
+			var argType = constructArgType(constr.argType(), constr.parameters(), constr.arguments());
 			argTypes.put(constr.argType(), argType);
 		}
 		return argTypes;
 	}
 
-	private static <T extends Record> T constructArgType(
-			String[] argStringsForError, Class<T> type, Class<?>[] parameters, Object[] arguments) throws ArgsException {
+	private static <T extends Record> T constructArgType(Class<T> type, Class<?>[] parameters, Object[] arguments) {
 		try {
 			Constructor<T> canonicalConstructor = type.getDeclaredConstructor(parameters);
 			canonicalConstructor.setAccessible(true);
 			return canonicalConstructor.newInstance(arguments);
 		} catch (IllegalAccessException ex) {
 			String message = "Make sure Args has reflective access to the argument record, e.g. with an `opens ... to ...` directive.";
-			throw new ArgsException(argStringsForError, type, List.of(new ArgsMessage(ILLEGAL_ACCESS, message)), ex);
+			throw new IllegalStateException(message, ex);
 		} catch (ReflectiveOperationException ex) {
 			String message = "There was an unexpected error while creating the argument record.";
-			throw new ArgsException(argStringsForError, type, List.of(new ArgsMessage(ILLEGAL_ACCESS, message)), ex);
+			throw new IllegalStateException(message, ex);
 		}
 	}
 
-	private static void throwOnErrors(
-			List<ArgsMessage> errors, List<ArgsMessage> warnings, String[] argStringsForError, List<Class<?>> typesForError) throws ArgsException {
+	private static void throwOnErrors(List<ArgsMessage> errors, List<ArgsMessage> warnings) {
 		if (errors.isEmpty() && warnings.isEmpty())
 			return;
 
 		List<ArgsMessage> messages = new ArrayList<>(errors);
 		messages.addAll(warnings);
-		throw new ArgsException(argStringsForError, typesForError, messages);
+		throw new InternalArgsException(messages);
 	}
 
 	@SuppressWarnings("unchecked")

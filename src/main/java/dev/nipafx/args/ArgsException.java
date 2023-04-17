@@ -15,26 +15,11 @@ public class ArgsException extends Exception {
 	private final List<? extends Class<?>> types;
 	private final List<? extends ArgsMessage> errors;
 
-	ArgsException(String[] args, Collection<? extends Class<?>> types, Collection<ArgsMessage> errors) {
-		super(combineErrors(errors));
+	ArgsException(String[] args, Collection<? extends Class<?>> types, InternalArgsException cause) {
+		super(combineErrors(cause.errors()), cause.getCause());
 		this.args = nonNull(args);
 		this.types = List.copyOf(types);
-		this.errors = List.copyOf(errors);
-	}
-
-	ArgsException(String[] args, Collection<? extends Class<?>> types, Collection<ArgsMessage> errors, Throwable cause) {
-		super(combineErrors(errors), cause);
-		this.args = nonNull(args);
-		this.types = List.copyOf(types);
-		this.errors = List.copyOf(errors);
-	}
-
-	ArgsException(String[] args, Class<?> type, Collection<ArgsMessage> errors) {
-		this(args, List.of(type), errors);
-	}
-
-	ArgsException(String[] args, Class<?> type, Collection<ArgsMessage> errors, Throwable cause) {
-		this(args, List.of(type), errors, cause);
+		this.errors = List.copyOf(cause.errors());
 	}
 
 	private static String combineErrors(Collection<ArgsMessage> errors) {
