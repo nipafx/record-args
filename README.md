@@ -1,7 +1,8 @@
 # RecordArgs
 
-A simple command-line argument parser for Java applications that relies on records.
-Specifically, it uses their component names to parse command line arguments, their canonical constructors to create instances, and their immutability to let you freely pass them around without fear of unwanted changes.
+A simple command-line argument parser for Java applications that relies on records and sealed interfaces.
+Specifically, it uses record component names to parse command line arguments, their canonical constructors to create instances, and their immutability to let you freely pass them around without fear of unwanted changes.
+It uses sealed interfaces to model mutually exclusive sets of arguments, so-called "modes".
 
 ## Getting started
 
@@ -173,3 +174,43 @@ public static void main(String[] args) throws ArgsException {
 ```
 
 The records must not have components of the same name or `Args::parse` throws an `IllegalArgumentException`.
+
+##  Parsing mutually exclusive arguments with "modes"
+
+If an application provides diverse features that take distinct execution paths, it might need argument sets for each path that have little to no overlap.
+Instead of parsing the arguments to one large or several small args record and then dealing with most arguments being absent, consider using "modes".
+
+A _mode_ is a sealed interface that permits only record implementations:
+
+```java
+sealed interface Mode permits Client, Server { }
+record Client(int port) implements Mode { }
+record Server(String url, int port) implements Mode { }
+```
+
+When such an interface is passed to `parse` an argument with its name and a value that is one of the implementing records' names (always first letter in lower case, e.g. `--mode client`) is used to determine which args record to fill and instantiate:
+
+```java
+String[] args = { "--mode", "client", "--port", "8080" };
+var arguments = Args.parse(args, Mode.class);
+
+switch (arguments) {
+	case Client configArgs -> spawnClient(configArgs);
+	case Server configArgs -> spawnServer(configArgs);
+}
+```
+
+The non-selected args records are ignored and no values are expected or allowed for them.
+This also means that, as in the example above, alternative args records can have components with the same name.
+
+It is possible to parse multiple modes as well as modes mixed with regular records, e.g.:
+
+```java
+sealed interface Mode permits Client, Server { }
+record Client(int port) implements Mode { }
+record Server(String url, int port) implements Mode { }
+record LogArgs(int logLevel) { }
+
+// elsewhere
+var arguments = Args.parse(args, Mode.class, LogArgs.class);
+```

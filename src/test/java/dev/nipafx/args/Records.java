@@ -9,8 +9,8 @@ class Records {
 
 	record None() { }
 
-	record WithString(String stringArg) { }
-	record WithPath(Path pathArg) { }
+	record WithString(String stringArg) implements Mode, SubtypesWithOverlappingComponents { }
+	record WithPath(Path pathArg) implements Type { }
 	record WithInteger(int intArg) { }
 	record WithLong(long longArg) { }
 	record WithFloat(float floatArg) { }
@@ -18,9 +18,9 @@ class Records {
 	record WithBoolean(boolean booleanArg) { }
 
 	record WithOptional(Optional<String> optionalArg) { }
-	record WithList(List<String> stringArgs) { }
+	record WithList(List<String> stringArgs) implements Mode { }
 	record WithListAndMore(List<String> stringArgs, boolean booleanArg) { }
-	record WithMap(Map<Integer, String> mapArgs) { }
+	record WithMap(Map<Integer, String> mapArgs) implements Type { }
 	record WithMapAndMore(Map<Integer, String> mapArgs, boolean booleanArg) { }
 
 	record WithStringArray(String[] stringsArg) { }
@@ -30,5 +30,11 @@ class Records {
 			List<Integer> numberArgs) { }
 
 	static class Class { }
+	interface Interface { }
 
+	sealed interface Mode permits WithString, WithList { }
+	sealed interface Type permits WithPath, WithMap { }
+
+	sealed interface SubtypesWithOverlappingComponents permits WithString, AnotherWithString { }
+	record AnotherWithString(String stringArg) implements SubtypesWithOverlappingComponents { }
 }

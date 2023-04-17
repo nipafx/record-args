@@ -1,6 +1,7 @@
 package dev.nipafx.args;
 
 import dev.nipafx.args.Records.Class;
+import dev.nipafx.args.Records.Interface;
 import dev.nipafx.args.Records.None;
 import dev.nipafx.args.Records.WithBoolean;
 import dev.nipafx.args.Records.WithInteger;
@@ -29,8 +30,18 @@ class ParsingErrorsTests {
 		var exception = assertThrows(
 				IllegalArgumentException.class, () -> Args.parse(args, Class.class));
 		assertThat(exception)
-				.hasMessageMatching("Types must be records.*")
+				.hasMessageMatching("Types must be records or sealed interfaces.*")
 				.hasMessageContaining(Class.class.getSimpleName());
+	}
+
+	@Test
+	void parseToInterface_noRecordError()  {
+		String[] args = { };
+		var exception = assertThrows(
+				IllegalArgumentException.class, () -> Args.parse(args, Interface.class));
+		assertThat(exception)
+				.hasMessageMatching("Types must be records or sealed interfaces.*")
+				.hasMessageContaining(Interface.class.getSimpleName());
 	}
 
 	@Test

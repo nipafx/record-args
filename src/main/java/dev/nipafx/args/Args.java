@@ -16,7 +16,7 @@ import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toMap;
 
 /**
- * Parses command-line arguments to args types - call {@link Args#parse(String[], Class) parse}
+ * Parses command-line arguments to args records - call {@link Args#parse(String[], Class) parse}
  * or one of its overloads (depending on how many args types are involved).
  */
 public class Args {
@@ -24,21 +24,20 @@ public class Args {
 	/**
 	 * Parses the specified string array to create an instance of the specified type.
 	 */
-	@SuppressWarnings("unchecked")
 	public static <ARGS_TYPE> ARGS_TYPE parse(
 			String[] argStrings, Class<ARGS_TYPE> type) throws ArgsException {
-		RecordPackager<ARGS_TYPE> packager = types -> (ARGS_TYPE) types.get(type);
+		RecordPackager<ARGS_TYPE> packager = types -> getFromInstanceMap(types, type);
 		return parse(argStrings, packager, type);
 	}
 
 	/**
 	 * Parses the specified string array to create instances of the specified types.
 	 */
-	@SuppressWarnings("unchecked")
 	public static <ARGS_TYPE_1, ARGS_TYPE_2> Parsed2<ARGS_TYPE_1, ARGS_TYPE_2> parse(
 			String[] argStrings, Class<ARGS_TYPE_1> type1, Class<ARGS_TYPE_2> type2) throws ArgsException {
-		RecordPackager<Parsed2<ARGS_TYPE_1, ARGS_TYPE_2>> packager = types
-				-> new Parsed2<>((ARGS_TYPE_1) types.get(type1), (ARGS_TYPE_2) types.get(type2));
+		RecordPackager<Parsed2<ARGS_TYPE_1, ARGS_TYPE_2>> packager = types -> new Parsed2<>(
+				getFromInstanceMap(types, type1),
+				getFromInstanceMap(types, type2));
 		return parse(argStrings, packager, type1, type2);
 	}
 
@@ -48,14 +47,18 @@ public class Args {
 	@SuppressWarnings("unchecked")
 	public static <ARGS_TYPE_1, ARGS_TYPE_2, ARGS_TYPE_3> Parsed3<ARGS_TYPE_1, ARGS_TYPE_2, ARGS_TYPE_3> parse(
 			String[] argStrings, Class<ARGS_TYPE_1> type1, Class<ARGS_TYPE_2> type2, Class<ARGS_TYPE_3> type3) throws ArgsException {
-		RecordPackager<Parsed3<ARGS_TYPE_1, ARGS_TYPE_2, ARGS_TYPE_3>> packager = types
-				-> new Parsed3<>((ARGS_TYPE_1) types.get(type1), (ARGS_TYPE_2) types.get(type2), (ARGS_TYPE_3) types.get(type3));
+		RecordPackager<Parsed3<ARGS_TYPE_1, ARGS_TYPE_2, ARGS_TYPE_3>> packager = types -> new Parsed3<>(
+				getFromInstanceMap(types, type1),
+				getFromInstanceMap(types, type2),
+				getFromInstanceMap(types, type3));
 		return parse(argStrings, packager, type1, type2, type3);
 	}
 
 	private static <T> T parse(String[] argStrings, RecordPackager<T> packager, Class<?>... types)
 			throws ArgsException {
-		var argsAndTypes = determineArgsAndTypes(argStrings, types);
+		var argsAndTypes = new ArgsFilter().processModes(argStrings, types);
+		throwOnErrors(argsAndTypes.errors(), List.of(), argStrings, List.of(types));
+
 		var args = inferArgs(argsAndTypes.types());
 		var messages = ArgsParser
 				.forArgs(args.all().toList())
@@ -70,19 +73,6 @@ public class Args {
 
 		var records = constructArgTypes(argStrings, constructorArguments);
 		return packager.apply(records);
-	}
-
-	private static ArgsAndTypes determineArgsAndTypes(String[] argStrings, Class<?>[] types) {
-		@SuppressWarnings("unchecked")
-		var recordTypes = stream(types)
-				.<Class<? extends Record>> map(type -> {
-					if (type.isRecord())
-						return (Class<? extends Record>) type;
-					else
-						throw new IllegalArgumentException("Types must be records, but '%s' isn't.".formatted(type));
-				})
-				.toList();
-		return new ArgsAndTypes(List.of(argStrings), recordTypes);
 	}
 
 	private static InferredArgs inferArgs(List<Class<? extends Record>> types) {
@@ -187,13 +177,25 @@ public class Args {
 		throw new ArgsException(argStringsForError, typesForError, messages);
 	}
 
+	@SuppressWarnings("unchecked")
+	private static <ARGS_TYPE> ARGS_TYPE getFromInstanceMap(Map<Class<? extends Record>, Record> instanceMap, Class<ARGS_TYPE> type) {
+		if (instanceMap.containsKey(type))
+			return (ARGS_TYPE) instanceMap.get(type);
+
+		//noinspection SuspiciousMethodCalls
+		return stream(type.getPermittedSubclasses())
+				.filter(instanceMap::containsKey)
+				.map(instanceMap::get)
+				.map(instance -> (ARGS_TYPE) instance)
+				.findAny()
+				.orElseThrow(() -> new IllegalStateException("There should've been an instance of a subtype of '%s'. 🤔".formatted(type)));
+	}
+
 	/*
 	 * INNER TYPES
 	 */
 
 	private interface RecordPackager<T> extends Function<Map<Class<? extends Record>, Record>, T> { }
-
-	private record ArgsAndTypes(List<String> argsStrings, List<Class<? extends Record>> types) { }
 
 	private record ConstructorArguments(
 			Class<? extends Record> argType, Class<?>[] parameters, Object[] arguments, List<ArgsMessage> errors) { }

@@ -1,7 +1,7 @@
 package dev.nipafx.args;
 
 /**
- * Result of parsing arguments to two args types with {@link Args#parse(String[], Class, Class)}.
+ * Result of parsing arguments to two args records with {@link Args#parse(String[], Class, Class)}.
  *
  * @param first instance of the first args type passed to {@code Args::parse}
  * @param second instance of the second args type passed to {@code Args::parse}
