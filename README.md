@@ -22,7 +22,7 @@ It uses sealed interfaces to model mutually exclusive sets of arguments, so-call
 	}
    ```
 
-In most cases, the passed arguments must alternate between an argument's name (prefixed by `--`) and its value.
+In most cases, the passed arguments must alternate between an argument's name (prefixed by `--`) and its value but the order of these pairs can be arbitrary.
 A value must be defined for all arguments that aren't of a container type (see below).
 
 ## Argument names
@@ -175,10 +175,12 @@ public static void main(String[] args) throws ArgsException {
 
 The records must not have components of the same name or `Args::parse` throws an `IllegalArgumentException`.
 
-##  Parsing mutually exclusive arguments with "modes"
+##  Parsing mutually exclusive arguments with "modes" and "actions"
 
 If an application provides diverse features that take distinct execution paths, it might need argument sets for each path that have little to no overlap.
-Instead of parsing the arguments to one large or several small args record and then dealing with most arguments being absent, consider using "modes".
+Instead of parsing the arguments to one large or several small args record and then dealing with most arguments being absent, consider using "modes" or an "action".
+
+### Modes
 
 A _mode_ is a sealed interface that permits only record implementations:
 
@@ -188,22 +190,32 @@ record Client(int port) implements Mode { }
 record Server(String url, int port) implements Mode { }
 ```
 
-When such an interface is passed to `parse` an argument with its name and a value that is one of the implementing records' names (always first letter in lower case, e.g. `--mode client`) is used to determine which args record to fill and instantiate:
+When such an interface is passed to `parse` an argument with its name and a value that is one of the implementing records' names (always first letter in lower case, e.g. `--mode client`) is used to determine which args record to fill and instantiate (this is called _mode selection_).
+That means the command line ...
+
+```
+java [...] --mode client --port 8080
+```
+
+... is best handled as follows:
 
 ```java
-String[] args = { "--mode", "client", "--port", "8080" };
-var arguments = Args.parse(args, Mode.class);
+public static void main(String[] args) throws ArgsException{
+	var arguments = Args.parse(args,Mode.class);
 
-switch (arguments) {
-	case Client configArgs -> spawnClient(configArgs);
-	case Server configArgs -> spawnServer(configArgs);
+	switch(arguments) {
+		// this path is taken
+		case Client configArgs -> spawnClient(configArgs);
+		case Server configArgs -> spawnServer(configArgs);
+	}
 }
 ```
 
 The non-selected args records are ignored and no values are expected or allowed for them.
 This also means that, as in the example above, alternative args records can have components with the same name.
 
-It is possible to parse multiple modes as well as modes mixed with regular records, e.g.:
+Just as with all other values, mode selection can happen anywhere within the `args` array.
+And it is possible to parse multiple modes as well as modes mixed with regular args records, e.g.:
 
 ```java
 sealed interface Mode permits Client, Server { }
@@ -211,6 +223,39 @@ record Client(int port) implements Mode { }
 record Server(String url, int port) implements Mode { }
 record LogArgs(int logLevel) { }
 
-// elsewhere
-var arguments = Args.parse(args, Mode.class, LogArgs.class);
+// java [...] --port 8080 --logLevel 3 --mode server --url localhost
+public static void main(String[] args) throws ArgsException {
+	var arguments = Args.parse(args, Mode.class, LogArgs.class);
+
+	Logging.configure(arguments.second());
+	switch(arguments.first()) {
+		case Client config -> spawnClient(config);
+		// this path is taken
+		case Server config -> spawnServer(config);
+	}
+}
+```
+
+### Actions
+
+An _action_ is a special mode where the selection is not done by a pair of arguments (e.g. `... --mode client ...`) but by having just the value as the first argument in the array (e.g. `client ...`).
+This interpretation is automatically and exclusively applied to interfaces with the simple name `Action`, e.g.:
+
+```java
+sealed interface Action permits Create, Copy, Move { }
+record Create(Path path) implements Action { }
+record Copy(Path from, Path to) implements Action { }
+record Move(Path from, Path to) implements Action { }
+
+// java [...] copy --from ... --to ...
+public static void main(String[] args) throws ArgsException {
+	var arguments = Args.parse(args, Action.class);
+
+	switch(arguments) {
+		case Create args -> create(args);
+		// this path is taken
+		case Copy args -> copy(args);
+		case Move args -> move(args);
+	}
+}
 ```

@@ -6,6 +6,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static dev.nipafx.args.ArgsCode.FAULTY_ACTION;
 import static dev.nipafx.args.ArgsCode.MISSING_ARGUMENT;
 import static dev.nipafx.args.ArgsCode.UNPARSEABLE_VALUE;
 import static java.util.Arrays.stream;
@@ -53,6 +54,36 @@ class ArgsFilter {
 	}
 
 	private void processSealedInterface(Class<?> type) {
+		if (type.getSimpleName().equals("Action"))
+			processAction(type);
+		else
+			processMode(type);
+	}
+
+	private void processAction(Class<?> type) {
+		var valueTypesByName = createValuesByTypeName(type);
+		var allowedValues = valueTypesByName
+				.keySet().stream()
+				.collect(joining("', '", "'", "'"));
+
+		if (argList.size() == 0) {
+			String message = "No arguments provided - first argument must be one of [ %s ].".formatted(allowedValues);
+			errors.add(new ArgsMessage(FAULTY_ACTION, message));
+		} else {
+			var value = argList.get(0);
+			var valueType = valueTypesByName.get(value);
+
+			if (valueType == null) {
+				var message = "First argument '%s' did not match any of the allowed values: [ %s ].".formatted(value, allowedValues);
+				errors.add(new ArgsMessage(FAULTY_ACTION, message));
+			} else {
+				argList.remove(0);
+				recordTypes.add(valueType);
+			}
+		}
+	}
+
+	private void processMode(Class<?> type) {
 		// create names of argument and values
 		var argumentName = "--" + lowerCaseFirstLetter(type);
 		var valueTypesByName = createValuesByTypeName(type);

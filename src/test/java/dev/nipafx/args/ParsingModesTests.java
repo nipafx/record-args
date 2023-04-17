@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class ParsingModesTests {
 
 	@Test
-	void singleSealedInterface_missingSelection_missingArgumentError() {
+	void singleMode_missingSelection_missingArgumentError() {
 		String[] args = { "--stringArg", "string" };
 		var exception = assertThrows(ArgsException.class, () -> Args.parse(args, Mode.class));
 		assertThat(exception.errors())
@@ -31,7 +31,7 @@ class ParsingModesTests {
 	}
 
 	@Test
-	void singleSealedInterface_incorrectSelection_unparseableValueError() {
+	void singleMode_incorrectSelection_unparseableValueError() {
 		String[] args = { "--mode", "withStringies", "--stringArg", "string" };
 		var exception = assertThrows(ArgsException.class, () -> Args.parse(args, Mode.class));
 		assertThat(exception.errors())
@@ -40,7 +40,7 @@ class ParsingModesTests {
 	}
 
 	@Test
-	void singleSealedInterface_correctSelectionButValuesForWrongSubtype_unknownArgumentError() {
+	void singleMode_correctSelectionButValuesForWrongSubtype_unknownArgumentError() {
 		String[] args = { "--mode", "withList", "--stringArg", "string" };
 		var exception = assertThrows(ArgsException.class, () -> Args.parse(args, Mode.class));
 		assertThat(exception.errors())
@@ -49,7 +49,7 @@ class ParsingModesTests {
 	}
 
 	@Test
-	void singleSealedInterface_correctSelectionAndValuesInOrder_parses() throws ArgsException {
+	void singleMode_correctSelectionAndValuesInOrder_parses() throws ArgsException {
 		String[] args = { "--mode", "withString", "--stringArg", "string" };
 		var parsed = Args.parse(args, Mode.class);
 
@@ -59,7 +59,7 @@ class ParsingModesTests {
 	}
 
 	@Test
-	void singleSealedInterface_correctSelectionAndValuesOutOfOrder_parses() throws ArgsException {
+	void singleMode_correctSelectionAndValuesOutOfOrder_parses() throws ArgsException {
 		String[] args = { "--stringArg", "string", "--mode", "withString" };
 		var parsed = Args.parse(args, Mode.class);
 
@@ -69,7 +69,7 @@ class ParsingModesTests {
 	}
 
 	@Test
-	void singleSealedInterfacePlusOneRecord_correctSelectionAndValuesInOrder_parses() throws ArgsException {
+	void singleModePlusOneRecord_correctSelectionAndValuesInOrder_parses() throws ArgsException {
 		String[] args = { "--mode", "withString", "--stringArg", "string", "--intArg", "42" };
 		var parsed = Args.parse(args, Mode.class, WithInteger.class);
 
@@ -81,7 +81,7 @@ class ParsingModesTests {
 	}
 
 	@Test
-	void singleSealedInterfacePlusOneRecord_correctSelectionAndValuesOutOfOrder_parses() throws ArgsException {
+	void singleModePlusOneRecord_correctSelectionAndValuesOutOfOrder_parses() throws ArgsException {
 		String[] args = { "--stringArg", "string", "--intArg", "42", "--mode", "withString" };
 		var parsed = Args.parse(args, Mode.class, WithInteger.class);
 
@@ -93,7 +93,7 @@ class ParsingModesTests {
 	}
 
 	@Test
-	void twoSealedInterfaces_correctSelectionAndValuesInOrder_parses() throws ArgsException {
+	void twoModes_correctSelectionAndValuesInOrder_parses() throws ArgsException {
 		String[] args = { "--mode", "withString", "--stringArg", "string", "--type", "withMap", "--mapArgs", "1=one" };
 		var parsed = Args.parse(args, Mode.class, Type.class);
 
@@ -107,7 +107,7 @@ class ParsingModesTests {
 	}
 
 	@Test
-	void twoSealedInterfaces_correctSelectionAndValuesOutOfOrder_parses() throws ArgsException {
+	void twoModes_correctSelectionAndValuesOutOfOrder_parses() throws ArgsException {
 		String[] args = { "--stringArg", "string", "--type", "withMap", "--mode", "withString", "--mapArgs", "1=one" };
 		var parsed = Args.parse(args, Mode.class, Type.class);
 
@@ -121,7 +121,7 @@ class ParsingModesTests {
 	}
 
 	@Test
-	void singleSealedInterfaceWithOverlappingComponents_correctSelectionAndValues_parses() throws ArgsException {
+	void singleModeWithOverlappingComponents_correctSelectionAndValues_parses() throws ArgsException {
 		String[] args = { "--subtypesWithOverlappingComponents", "anotherWithString", "--stringArg", "string" };
 		var parsed = Args.parse(args, SubtypesWithOverlappingComponents.class);
 
