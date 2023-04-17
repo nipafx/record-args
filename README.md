@@ -17,7 +17,7 @@ It uses sealed interfaces to model mutually exclusive sets of arguments, so-call
 	```
 4. Call `Args::parse`:
 	```java
-	public static void main(String[] args) throws ArgsException {
+	public static void main(String[] args) throws ArgsParseException {
 		ServerArgs serverArgs = Args.parse(args, ServerArgs.class);
 	}
    ```
@@ -166,7 +166,7 @@ record LogArgs(int logLevel) { }
 record ServerArgs(String url, int port) { }
 
 // parsing arguments
-public static void main(String[] args) throws ArgsException {
+public static void main(String[] args) throws ArgsParseException {
 	Parsed2 parsed = Args.parse(args, LogArgs.class, ServerArgs.class);
 	LogArgs logArgs = parsed.first();
 	ServerArgs serverArgs = parsed.second();
@@ -200,7 +200,7 @@ java [...] --mode client --port 8080
 ... is best handled as follows:
 
 ```java
-public static void main(String[] args) throws ArgsException{
+public static void main(String[] args) throws ArgsParseException{
 	var arguments = Args.parse(args,Mode.class);
 
 	switch(arguments) {
@@ -224,7 +224,7 @@ record Server(String url, int port) implements Mode { }
 record LogArgs(int logLevel) { }
 
 // java [...] --port 8080 --logLevel 3 --mode server --url localhost
-public static void main(String[] args) throws ArgsException {
+public static void main(String[] args) throws ArgsParseException {
 	var arguments = Args.parse(args, Mode.class, LogArgs.class);
 
 	Logging.configure(arguments.second());
@@ -248,7 +248,7 @@ record Copy(Path from, Path to) implements Action { }
 record Move(Path from, Path to) implements Action { }
 
 // java [...] copy --from ... --to ...
-public static void main(String[] args) throws ArgsException {
+public static void main(String[] args) throws ArgsParseException {
 	var arguments = Args.parse(args, Action.class);
 
 	switch(arguments) {

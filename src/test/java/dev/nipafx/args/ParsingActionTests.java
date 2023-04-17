@@ -10,8 +10,8 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
 
-import static dev.nipafx.args.ArgsCode.FAULTY_ACTION;
-import static dev.nipafx.args.ArgsCode.UNKNOWN_ARGUMENT;
+import static dev.nipafx.args.ArgsParseErrorCode.FAULTY_ACTION;
+import static dev.nipafx.args.ArgsParseErrorCode.UNKNOWN_ARGUMENT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -21,7 +21,7 @@ class ParsingActionTests {
 	@Test
 	void justAction_missingSelection_faultyActionError() {
 		String[] args = { "--intArg", "42" };
-		var exception = assertThrows(ArgsException.class, () -> Args.parse(args, Action.class));
+		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, Action.class));
 		assertThat(exception.errors())
 				.map(ArgsMessage::code)
 				.containsExactlyInAnyOrder(FAULTY_ACTION);
@@ -30,7 +30,7 @@ class ParsingActionTests {
 	@Test
 	void justAction_incorrectSelection_faultyActionError() {
 		String[] args = { "withInt", "--intArg", "42" };
-		var exception = assertThrows(ArgsException.class, () -> Args.parse(args, Action.class));
+		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, Action.class));
 		assertThat(exception.errors())
 				.map(ArgsMessage::code)
 				.containsExactlyInAnyOrder(FAULTY_ACTION);
@@ -39,23 +39,23 @@ class ParsingActionTests {
 	@Test
 	void justAction_correctSelectionButValuesForWrongSubtype_unknownArgumentError() {
 		String[] args = { "withInteger", "--optionalArg", "string" };
-		var exception = assertThrows(ArgsException.class, () -> Args.parse(args, Action.class));
+		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, Action.class));
 		assertThat(exception.errors())
 				.map(ArgsMessage::code)
 				.containsExactlyInAnyOrder(UNKNOWN_ARGUMENT);
 	}
 
 	@Test
-	void justAction_correctSelectionButActionOutOfOrder_faultyActionError() throws ArgsException {
+	void justAction_correctSelectionButActionOutOfOrder_faultyActionError() throws ArgsParseException {
 		String[] args = { "--intArg", "42", "withString" };
-		var exception = assertThrows(ArgsException.class, () -> Args.parse(args, Action.class));
+		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, Action.class));
 		assertThat(exception.errors())
 				.map(ArgsMessage::code)
 				.containsExactlyInAnyOrder(FAULTY_ACTION);
 	}
 
 	@Test
-	void justAction_correctSelectionAndValuesInOrder_parses() throws ArgsException {
+	void justAction_correctSelectionAndValuesInOrder_parses() throws ArgsParseException {
 		String[] args = { "withInteger", "--intArg", "42" };
 		var parsed = Args.parse(args, Action.class);
 
@@ -65,7 +65,7 @@ class ParsingActionTests {
 	}
 
 	@Test
-	void actionPlusOneRecord_correctSelectionAndValuesInOrder_parses() throws ArgsException {
+	void actionPlusOneRecord_correctSelectionAndValuesInOrder_parses() throws ArgsParseException {
 		String[] args = { "withInteger", "--intArg", "42", "--stringArg", "string" };
 		var parsed = Args.parse(args, Action.class, WithString.class);
 
@@ -77,7 +77,7 @@ class ParsingActionTests {
 	}
 
 	@Test
-	void actionPlusOneRecord_correctSelectionAndValuesOutOfOrder_parses() throws ArgsException {
+	void actionPlusOneRecord_correctSelectionAndValuesOutOfOrder_parses() throws ArgsParseException {
 		String[] args = { "withInteger", "--intArg", "42", "--stringArg", "string" };
 		var parsed = Args.parse(args, Action.class, WithString.class);
 
@@ -89,7 +89,7 @@ class ParsingActionTests {
 	}
 
 	@Test
-	void actionPlusMode_correctSelectionAndValuesInOrder_parses() throws ArgsException {
+	void actionPlusMode_correctSelectionAndValuesInOrder_parses() throws ArgsParseException {
 		String[] args = { "withInteger", "--intArg", "42", "--mode", "withString", "--stringArg", "string" };
 		var parsed = Args.parse(args, Action.class, Mode.class);
 
@@ -103,7 +103,7 @@ class ParsingActionTests {
 	}
 
 	@Test
-	void actionPlusMode_correctSelectionAndValuesOutOfOrder_parses() throws ArgsException {
+	void actionPlusMode_correctSelectionAndValuesOutOfOrder_parses() throws ArgsParseException {
 		String[] args = { "withInteger", "--mode", "withString", "--intArg", "42", "--stringArg", "string" };
 		var parsed = Args.parse(args, Action.class, Mode.class);
 
@@ -117,7 +117,7 @@ class ParsingActionTests {
 	}
 
 	@Test
-	void actionPlusModePlusRecord_correctSelectionAndValuesInOrder_parses() throws ArgsException {
+	void actionPlusModePlusRecord_correctSelectionAndValuesInOrder_parses() throws ArgsParseException {
 		String[] args = { "withInteger", "--intArg", "42", "--mode", "withString", "--stringArg", "string", "--pathArg", "/tmp" };
 		var parsed = Args.parse(args, Action.class, Mode.class, WithPath.class);
 
@@ -135,7 +135,7 @@ class ParsingActionTests {
 	}
 
 	@Test
-	void actionPlusModePlusRecord_correctSelectionAndValuesOutOfOrder_parses() throws ArgsException {
+	void actionPlusModePlusRecord_correctSelectionAndValuesOutOfOrder_parses() throws ArgsParseException {
 		String[] args = { "withInteger", "--pathArg", "/tmp", "--stringArg", "string", "--intArg", "42", "--mode", "withString" };
 		var parsed = Args.parse(args, Action.class, Mode.class, WithPath.class);
 

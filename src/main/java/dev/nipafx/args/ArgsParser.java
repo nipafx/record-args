@@ -6,11 +6,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-import static dev.nipafx.args.ArgsCode.MISSING_VALUE;
-import static dev.nipafx.args.ArgsCode.UNEXPECTED_VALUE;
-import static dev.nipafx.args.ArgsCode.UNKNOWN_ARGUMENT;
-import static dev.nipafx.args.ArgsCode.UNPARSEABLE_VALUE;
-import static dev.nipafx.args.Check.nonNull;
+import static dev.nipafx.args.ArgsParseErrorCode.MISSING_VALUE;
+import static dev.nipafx.args.ArgsParseErrorCode.UNEXPECTED_VALUE;
+import static dev.nipafx.args.ArgsParseErrorCode.UNKNOWN_ARGUMENT;
+import static dev.nipafx.args.ArgsParseErrorCode.UNPARSEABLE_VALUE;
+import static dev.nipafx.args.Check.internalErrorOnNull;
 
 class ArgsParser {
 
@@ -22,7 +22,7 @@ class ArgsParser {
 	private final List<ArgsMessage> mutableWarnings;
 
 	private ArgsParser(List<Arg<?>> args) {
-		this.args = List.copyOf(args);
+		this.args = List.copyOf(internalErrorOnNull(args));
 		this.mutableErrors = new ArrayList<>();
 		this.mutableWarnings = new ArrayList<>();
 
@@ -37,6 +37,8 @@ class ArgsParser {
 	}
 
 	public ArgsMessages parse(List<String> argStrings) {
+		internalErrorOnNull(argStrings);
+
 		for (String argString : argStrings)
 			state = state.transition(argString);
 		state.finish();
@@ -130,7 +132,7 @@ class ArgsParser {
 		private final Arg<?> currentArg;
 
 		ExpectingValue(Arg<?> currentArg) {
-			this.currentArg = nonNull(currentArg);
+			this.currentArg = internalErrorOnNull(currentArg);
 		}
 
 		@Override
@@ -171,7 +173,7 @@ class ArgsParser {
 		private final Arg<?> currentArg;
 
 		ExpectingNameOrAdditionalValue(Arg<?> currentArg) {
-			this.currentArg = nonNull(currentArg);
+			this.currentArg = internalErrorOnNull(currentArg);
 		}
 
 		@Override

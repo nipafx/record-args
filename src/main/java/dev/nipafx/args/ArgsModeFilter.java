@@ -4,11 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import static dev.nipafx.args.ArgsCode.FAULTY_ACTION;
-import static dev.nipafx.args.ArgsCode.MISSING_ARGUMENT;
-import static dev.nipafx.args.ArgsCode.UNPARSEABLE_VALUE;
+import static dev.nipafx.args.ArgsDefinitionErrorCode.ILL_DEFINED_ARGS_TYPE;
+import static dev.nipafx.args.ArgsParseErrorCode.FAULTY_ACTION;
+import static dev.nipafx.args.ArgsParseErrorCode.MISSING_ARGUMENT;
+import static dev.nipafx.args.ArgsParseErrorCode.UNPARSEABLE_VALUE;
+import static dev.nipafx.args.Check.internalErrorOnNull;
 import static java.util.Arrays.stream;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.joining;
@@ -28,6 +29,9 @@ class ArgsFilter {
 	}
 
 	public ArgsAndTypes processModes(String[] argStrings, Class<?>[] types) {
+		internalErrorOnNull(argStrings);
+		internalErrorOnNull(types);
+
 		argList.addAll(List.of(argStrings));
 
 		for (Class<?> type : types) {
@@ -37,7 +41,7 @@ class ArgsFilter {
 				processSealedInterface(type);
 			} else {
 				var message = "Types must be records or sealed interfaces with exclusively record implementations, but '%s' isn't.";
-				throw new IllegalArgumentException(message.formatted(type));
+				throw new ArgsDefinitionException(ILL_DEFINED_ARGS_TYPE, message.formatted(type));
 			}
 		}
 
@@ -123,7 +127,7 @@ class ArgsFilter {
 						return (Class<? extends Record>) subtype;
 					else {
 						var message = "Types must be records or sealed interfaces with exclusively record implementations, but '%s' isn't.";
-						throw new IllegalArgumentException(message.formatted(subtype));
+						throw new ArgsDefinitionException(ILL_DEFINED_ARGS_TYPE, message.formatted(subtype));
 					}
 				})
 				.collect(toMap(ArgsFilter::lowerCaseFirstLetter, identity()));

@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ParsingOptionalValuesTests {
 
 	@Test
-	void withoutArgs_programWithOptionalArg_parses() throws ArgsException {
+	void withoutArgs_programWithOptionalArg_parses() throws ArgsParseException {
 		String[] args = { };
 		WithOptional parsed = Args.parse(args, WithOptional.class);
 
@@ -18,7 +18,7 @@ class ParsingOptionalValuesTests {
 	}
 
 	@Test
-	void withArg_programWithOptionalArg_parses() throws ArgsException {
+	void withArg_programWithOptionalArg_parses() throws ArgsParseException {
 		String[] args = { "--optionalArg", "string" };
 		WithOptional parsed = Args.parse(args, WithOptional.class);
 

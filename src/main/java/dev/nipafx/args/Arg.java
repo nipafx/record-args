@@ -11,12 +11,13 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-import static dev.nipafx.args.Check.nonNull;
+import static dev.nipafx.args.ArgsDefinitionErrorCode.UNSUPPORTED_ARGUMENT_TYPE;
+import static dev.nipafx.args.Check.internalErrorOnNull;
 
 /**
  * An argument as defined by an args record component, possibly holding a value.
  *
- * Two {@code Arg} instances are {@link Object#equals(Object) equal} if they have the same name.
+ * <p>Two {@code Arg} instances are {@link Object#equals(Object) equal} if they have the same name.</p>
  *
  * @param <T> the type of the component
  */
@@ -54,8 +55,8 @@ abstract class AbstractArg<T> {
 	private final Class<T> type;
 
 	protected AbstractArg(String name, Class<T> type) {
-		this.name = nonNull(name);
-		this.type = nonNull(type);
+		this.name = internalErrorOnNull(name);
+		this.type = internalErrorOnNull(type);
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -99,7 +100,7 @@ abstract class AbstractArg<T> {
 	private static <T> Class<T> assertSupported(Class<T> type) {
 		if (!SUPPORTED_TYPES.contains(type)) {
 			String message = "Argument type %s is not supported.".formatted(type.getSimpleName());
-			throw new IllegalArgumentException(message);
+			throw new ArgsDefinitionException(UNSUPPORTED_ARGUMENT_TYPE, message);
 		}
 		return type;
 	}
@@ -118,7 +119,10 @@ abstract class AbstractArg<T> {
 				case "false" -> false;
 				default -> throw new IllegalArgumentException("Only 'true' and 'false' allowed for boolean args.");
 			};
-			default -> throw new IllegalStateException("This shouldn't happen... 🤔");
+			default -> {
+				var message = "The unsupported argument type %s (with value '%s') was encountered after those should already have been detected.";
+				throw new IllegalStateException(message.formatted(type, value));
+			}
 		};
 	}
 

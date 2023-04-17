@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ParsingMultipleRecordsTests {
 
 	@Test
-	void multipleArgsTwoRecords_correctValuesInOrder_parses() throws ArgsException {
+	void multipleArgsTwoRecords_correctValuesInOrder_parses() throws ArgsParseException {
 		String[] args = { "--stringArg", "string", "--pathArg", "/tmp" };
 		var parsed = Args.parse(args, WithString.class, WithPath.class);
 
@@ -26,7 +26,7 @@ class ParsingMultipleRecordsTests {
 	}
 
 	@Test
-	void multipleArgsTwoRecords_correctValuesOutOfOrder_parses() throws ArgsException {
+	void multipleArgsTwoRecords_correctValuesOutOfOrder_parses() throws ArgsParseException {
 		String[] args = { "--pathArg", "/tmp", "--stringArg", "string" };
 		var parsed = Args.parse(args, WithString.class, WithPath.class);
 
@@ -35,7 +35,7 @@ class ParsingMultipleRecordsTests {
 	}
 
 	@Test
-	void multipleArgsThreeRecords_correctValuesInOrder_parses() throws ArgsException {
+	void multipleArgsThreeRecords_correctValuesInOrder_parses() throws ArgsParseException {
 		String[] args = {
 				"--intArg", "5", "--numberArgs", "42", "63", "--booleanArg", "--stringArg", "string", "--floatArg", "5.5",
 				"--longArg", "5921650832",
@@ -57,7 +57,7 @@ class ParsingMultipleRecordsTests {
 	}
 
 	@Test
-	void multipleArgsThreeRecords_correctValuesOutOfOrder_parses() throws ArgsException {
+	void multipleArgsThreeRecords_correctValuesOutOfOrder_parses() throws ArgsParseException {
 		String[] args = {
 				"--floatArg", "5.5", "--intArg", "5", "--numberArgs", "42", "63",
 				"--mapArgs", "1=one", "2=two", "3=three", "--booleanArg",

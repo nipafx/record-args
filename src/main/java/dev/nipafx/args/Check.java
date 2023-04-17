@@ -2,9 +2,9 @@ package dev.nipafx.args;
 
 class Check {
 
-	static <T> T nonNull(T object) {
+	static <T> T internalErrorOnNull(T object) {
 		if (object == null)
-			throw new IllegalArgumentException("Argument should not have been null.");
+			throw new IllegalStateException("An argument was null when it was not supposed to.");
 		return object;
 	}
 

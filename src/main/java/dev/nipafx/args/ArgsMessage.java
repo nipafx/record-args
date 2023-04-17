@@ -2,6 +2,8 @@ package dev.nipafx.args;
 
 import java.util.Optional;
 
+import static dev.nipafx.args.Check.internalErrorOnNull;
+
 /**
  * A warning or error that occurred while parsing command line arguments.
  *
@@ -9,13 +11,19 @@ import java.util.Optional;
  * @param message a textual description of the warning/error
  * @param cause the {@link Exception} that caused the error (if available)
  */
-public record ArgsMessage(ArgsCode code, String message, Optional<Exception> cause) {
+public record ArgsMessage(ArgsParseErrorCode code, String message, Optional<Exception> cause) {
 
-	ArgsMessage(ArgsCode code, String message) {
+	public ArgsMessage {
+		internalErrorOnNull(code);
+		internalErrorOnNull(message);
+		internalErrorOnNull(cause);
+	}
+
+	ArgsMessage(ArgsParseErrorCode code, String message) {
 		this(code, message, Optional.empty());
 	}
 
-	ArgsMessage(ArgsCode code, String message, Exception cause) {
+	ArgsMessage(ArgsParseErrorCode code, String message, Exception cause) {
 		this(code, message, Optional.of(cause));
 	}
 

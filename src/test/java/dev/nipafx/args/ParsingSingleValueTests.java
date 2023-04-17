@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ParsingSingleValueTests {
 
 	@Test
-	void withoutArgs_programWithoutArgs_parses() throws ArgsException {
+	void withoutArgs_programWithoutArgs_parses() throws ArgsParseException {
 		String[] args = { };
 		None parsed = Args.parse(args, None.class);
 
@@ -27,7 +27,7 @@ class ParsingSingleValueTests {
 	}
 
 	@Test
-	void withStringArg_programWithStringArg_parses() throws ArgsException {
+	void withStringArg_programWithStringArg_parses() throws ArgsParseException {
 		String[] args = { "--stringArg", "foobar" };
 		WithString parsed = Args.parse(args, WithString.class);
 
@@ -35,7 +35,7 @@ class ParsingSingleValueTests {
 	}
 
 	@Test
-	void withPathArg_programWithPathArg_parses() throws ArgsException {
+	void withPathArg_programWithPathArg_parses() throws ArgsParseException {
 		String[] args = { "--pathArg", "/tmp" };
 		WithPath parsed = Args.parse(args, WithPath.class);
 
@@ -43,7 +43,7 @@ class ParsingSingleValueTests {
 	}
 
 	@Test
-	void withIntegerArg_programWithIntegerArg_parses() throws ArgsException {
+	void withIntegerArg_programWithIntegerArg_parses() throws ArgsParseException {
 		String[] args = { "--intArg", "5" };
 		WithInteger parsed = Args.parse(args, WithInteger.class);
 
@@ -51,7 +51,7 @@ class ParsingSingleValueTests {
 	}
 
 	@Test
-	void withLongArg_programWithLongArg_parses() throws ArgsException {
+	void withLongArg_programWithLongArg_parses() throws ArgsParseException {
 		String[] args = { "--longArg", "5" };
 		WithLong parsed = Args.parse(args, WithLong.class);
 
@@ -59,7 +59,7 @@ class ParsingSingleValueTests {
 	}
 
 	@Test
-	void withFloatArg_programWithFloatArg_parses() throws ArgsException {
+	void withFloatArg_programWithFloatArg_parses() throws ArgsParseException {
 		String[] args = { "--floatArg", "5.5" };
 		WithFloat parsed = Args.parse(args, WithFloat.class);
 
@@ -67,7 +67,7 @@ class ParsingSingleValueTests {
 	}
 
 	@Test
-	void withDoubleArg_programWithDoubleArg_parses() throws ArgsException {
+	void withDoubleArg_programWithDoubleArg_parses() throws ArgsParseException {
 		String[] args = { "--doubleArg", "5.5" };
 		WithDouble parsed = Args.parse(args, WithDouble.class);
 
@@ -75,7 +75,7 @@ class ParsingSingleValueTests {
 	}
 
 	@Test
-	void withBooleanFalseArg_programWithBooleanArg_parses() throws ArgsException {
+	void withBooleanFalseArg_programWithBooleanArg_parses() throws ArgsParseException {
 		String[] args = { "--booleanArg", "false" };
 		WithBoolean parsed = Args.parse(args, WithBoolean.class);
 
@@ -83,7 +83,7 @@ class ParsingSingleValueTests {
 	}
 
 	@Test
-	void withTrueBooleanArg_programWithBooleanArg_parses() throws ArgsException {
+	void withTrueBooleanArg_programWithBooleanArg_parses() throws ArgsParseException {
 		String[] args = { "--booleanArg", "true" };
 		WithBoolean parsed = Args.parse(args, WithBoolean.class);
 
@@ -91,7 +91,7 @@ class ParsingSingleValueTests {
 	}
 
 	@Test
-	void withBooleanArgWithoutValue_programWithBooleanArg_parses() throws ArgsException {
+	void withBooleanArgWithoutValue_programWithBooleanArg_parses() throws ArgsParseException {
 		String[] args = { "--booleanArg" };
 		WithBoolean parsed = Args.parse(args, WithBoolean.class);
 

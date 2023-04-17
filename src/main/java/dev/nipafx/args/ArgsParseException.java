@@ -3,21 +3,21 @@ package dev.nipafx.args;
 import java.util.Collection;
 import java.util.List;
 
-import static dev.nipafx.args.Check.nonNull;
+import static dev.nipafx.args.Check.internalErrorOnNull;
 import static java.util.stream.Collectors.joining;
 
 /**
  * Thrown when parsing command line arguments fails.
  */
-public class ArgsException extends Exception {
+public class ArgsParseException extends Exception {
 
 	private final String[] args;
 	private final List<? extends Class<?>> types;
 	private final List<? extends ArgsMessage> errors;
 
-	ArgsException(String[] args, Collection<? extends Class<?>> types, InternalArgsException cause) {
+	ArgsParseException(String[] args, Collection<? extends Class<?>> types, InternalArgsException cause) {
 		super(combineErrors(cause.errors()), cause.getCause());
-		this.args = nonNull(args);
+		this.args = internalErrorOnNull(args);
 		this.types = List.copyOf(types);
 		this.errors = List.copyOf(cause.errors());
 	}
@@ -43,7 +43,7 @@ public class ArgsException extends Exception {
 	}
 
 	/**
-	 * @return unmodifiable list of {@link ArgsMessage}s
+	 * @return {@link ArgsMessage} that describe the errors
 	 */
 	public List<? extends ArgsMessage> errors() {
 		return errors;

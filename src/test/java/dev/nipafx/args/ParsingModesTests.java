@@ -12,9 +12,9 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static dev.nipafx.args.ArgsCode.MISSING_ARGUMENT;
-import static dev.nipafx.args.ArgsCode.UNKNOWN_ARGUMENT;
-import static dev.nipafx.args.ArgsCode.UNPARSEABLE_VALUE;
+import static dev.nipafx.args.ArgsParseErrorCode.MISSING_ARGUMENT;
+import static dev.nipafx.args.ArgsParseErrorCode.UNKNOWN_ARGUMENT;
+import static dev.nipafx.args.ArgsParseErrorCode.UNPARSEABLE_VALUE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -24,7 +24,7 @@ class ParsingModesTests {
 	@Test
 	void singleMode_missingSelection_missingArgumentError() {
 		String[] args = { "--stringArg", "string" };
-		var exception = assertThrows(ArgsException.class, () -> Args.parse(args, Mode.class));
+		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, Mode.class));
 		assertThat(exception.errors())
 				.map(ArgsMessage::code)
 				.containsExactlyInAnyOrder(MISSING_ARGUMENT);
@@ -33,7 +33,7 @@ class ParsingModesTests {
 	@Test
 	void singleMode_incorrectSelection_unparseableValueError() {
 		String[] args = { "--mode", "withStringies", "--stringArg", "string" };
-		var exception = assertThrows(ArgsException.class, () -> Args.parse(args, Mode.class));
+		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, Mode.class));
 		assertThat(exception.errors())
 				.map(ArgsMessage::code)
 				.containsExactlyInAnyOrder(UNPARSEABLE_VALUE);
@@ -42,14 +42,14 @@ class ParsingModesTests {
 	@Test
 	void singleMode_correctSelectionButValuesForWrongSubtype_unknownArgumentError() {
 		String[] args = { "--mode", "withList", "--stringArg", "string" };
-		var exception = assertThrows(ArgsException.class, () -> Args.parse(args, Mode.class));
+		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, Mode.class));
 		assertThat(exception.errors())
 				.map(ArgsMessage::code)
 				.containsExactlyInAnyOrder(UNKNOWN_ARGUMENT);
 	}
 
 	@Test
-	void singleMode_correctSelectionAndValuesInOrder_parses() throws ArgsException {
+	void singleMode_correctSelectionAndValuesInOrder_parses() throws ArgsParseException {
 		String[] args = { "--mode", "withString", "--stringArg", "string" };
 		var parsed = Args.parse(args, Mode.class);
 
@@ -59,7 +59,7 @@ class ParsingModesTests {
 	}
 
 	@Test
-	void singleMode_correctSelectionAndValuesOutOfOrder_parses() throws ArgsException {
+	void singleMode_correctSelectionAndValuesOutOfOrder_parses() throws ArgsParseException {
 		String[] args = { "--stringArg", "string", "--mode", "withString" };
 		var parsed = Args.parse(args, Mode.class);
 
@@ -69,7 +69,7 @@ class ParsingModesTests {
 	}
 
 	@Test
-	void singleModePlusOneRecord_correctSelectionAndValuesInOrder_parses() throws ArgsException {
+	void singleModePlusOneRecord_correctSelectionAndValuesInOrder_parses() throws ArgsParseException {
 		String[] args = { "--mode", "withString", "--stringArg", "string", "--intArg", "42" };
 		var parsed = Args.parse(args, Mode.class, WithInteger.class);
 
@@ -81,7 +81,7 @@ class ParsingModesTests {
 	}
 
 	@Test
-	void singleModePlusOneRecord_correctSelectionAndValuesOutOfOrder_parses() throws ArgsException {
+	void singleModePlusOneRecord_correctSelectionAndValuesOutOfOrder_parses() throws ArgsParseException {
 		String[] args = { "--stringArg", "string", "--intArg", "42", "--mode", "withString" };
 		var parsed = Args.parse(args, Mode.class, WithInteger.class);
 
@@ -93,7 +93,7 @@ class ParsingModesTests {
 	}
 
 	@Test
-	void twoModes_correctSelectionAndValuesInOrder_parses() throws ArgsException {
+	void twoModes_correctSelectionAndValuesInOrder_parses() throws ArgsParseException {
 		String[] args = { "--mode", "withString", "--stringArg", "string", "--type", "withMap", "--mapArgs", "1=one" };
 		var parsed = Args.parse(args, Mode.class, Type.class);
 
@@ -107,7 +107,7 @@ class ParsingModesTests {
 	}
 
 	@Test
-	void twoModes_correctSelectionAndValuesOutOfOrder_parses() throws ArgsException {
+	void twoModes_correctSelectionAndValuesOutOfOrder_parses() throws ArgsParseException {
 		String[] args = { "--stringArg", "string", "--type", "withMap", "--mode", "withString", "--mapArgs", "1=one" };
 		var parsed = Args.parse(args, Mode.class, Type.class);
 
@@ -121,7 +121,7 @@ class ParsingModesTests {
 	}
 
 	@Test
-	void singleModeWithOverlappingComponents_correctSelectionAndValues_parses() throws ArgsException {
+	void singleModeWithOverlappingComponents_correctSelectionAndValues_parses() throws ArgsParseException {
 		String[] args = { "--subtypesWithOverlappingComponents", "anotherWithString", "--stringArg", "string" };
 		var parsed = Args.parse(args, SubtypesWithOverlappingComponents.class);
 

@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ParsingListValuesTests {
 
 	@Test
-	void withoutArgs_programWithListArg_parses() throws ArgsException {
+	void withoutArgs_programWithListArg_parses() throws ArgsParseException {
 		String[] args = { };
 		WithList parsed = Args.parse(args, WithList.class);
 
@@ -19,7 +19,7 @@ class ParsingListValuesTests {
 	}
 
 	@Test
-	void withOneArg_programWithListArg_parses() throws ArgsException {
+	void withOneArg_programWithListArg_parses() throws ArgsParseException {
 		String[] args = { "--stringArgs", "string" };
 		WithList parsed = Args.parse(args, WithList.class);
 
@@ -27,7 +27,7 @@ class ParsingListValuesTests {
 	}
 
 	@Test
-	void withListArgs_programWithListArg_parses() throws ArgsException {
+	void withListArgs_programWithListArg_parses() throws ArgsParseException {
 		String[] args = { "--stringArgs", "string 1", "string 2", "string 3" };
 		WithList parsed = Args.parse(args, WithList.class);
 
@@ -35,7 +35,7 @@ class ParsingListValuesTests {
 	}
 
 	@Test
-	void withListArgsFollowedByOtherArg_programWithListArg_parses() throws ArgsException {
+	void withListArgsFollowedByOtherArg_programWithListArg_parses() throws ArgsParseException {
 		String[] args = { "--stringArgs", "string 1", "string 2", "string 3", "--booleanArg" };
 		WithListAndMore parsed = Args.parse(args, WithListAndMore.class);
 

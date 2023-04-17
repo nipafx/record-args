@@ -1,5 +1,7 @@
 package dev.nipafx.args;
 
+import static dev.nipafx.args.Check.internalErrorOnNull;
+
 /**
  * Result of parsing arguments to two args records with {@link Args#parse(String[], Class, Class)}.
  *
@@ -10,4 +12,11 @@ package dev.nipafx.args;
  */
 public record Parsed2<ARGS_TYPE_1, ARGS_TYPE_2>(
 		ARGS_TYPE_1 first,
-		ARGS_TYPE_2 second) { }
+		ARGS_TYPE_2 second) {
+
+	public Parsed2 {
+		internalErrorOnNull(first);
+		internalErrorOnNull(second);
+	}
+
+}

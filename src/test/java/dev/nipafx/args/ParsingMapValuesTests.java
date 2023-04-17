@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ParsingMapValuesTests {
 
 	@Test
-	void withoutArgs_programWithMapArg_parses() throws ArgsException {
+	void withoutArgs_programWithMapArg_parses() throws ArgsParseException {
 		String[] args = { };
 		WithMap parsed = Args.parse(args, WithMap.class);
 
@@ -21,7 +21,7 @@ class ParsingMapValuesTests {
 	}
 
 	@Test
-	void withOneArgPair_programWithMapArg_parses() throws ArgsException {
+	void withOneArgPair_programWithMapArg_parses() throws ArgsParseException {
 		String[] args = { "--mapArgs", "1=one" };
 		WithMap parsed = Args.parse(args, WithMap.class);
 
@@ -29,7 +29,7 @@ class ParsingMapValuesTests {
 	}
 
 	@Test
-	void withMultipleArgPairs_programWithMapArg_parses() throws ArgsException {
+	void withMultipleArgPairs_programWithMapArg_parses() throws ArgsParseException {
 		String[] args = { "--mapArgs", "1=one", "2=two", "3=three" };
 		WithMap parsed = Args.parse(args, WithMap.class);
 
@@ -40,7 +40,7 @@ class ParsingMapValuesTests {
 	}
 
 	@Test
-	void withMultipleArgPairsFollowedByOtherArg_programWithMapArg_parses() throws ArgsException {
+	void withMultipleArgPairsFollowedByOtherArg_programWithMapArg_parses() throws ArgsParseException {
 		String[] args = { "--mapArgs", "1=one", "2=two", "3=three", "--booleanArg" };
 		WithMapAndMore parsed = Args.parse(args, WithMapAndMore.class);
 

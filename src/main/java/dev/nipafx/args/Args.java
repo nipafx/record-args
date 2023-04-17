@@ -10,7 +10,9 @@ import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import static dev.nipafx.args.ArgsCode.MISSING_ARGUMENT;
+import static dev.nipafx.args.ArgsDefinitionErrorCode.DUPLICATE_ARGUMENT_DEFINITION;
+import static dev.nipafx.args.ArgsDefinitionErrorCode.ILLEGAL_ACCESS;
+import static dev.nipafx.args.ArgsParseErrorCode.MISSING_ARGUMENT;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toMap;
 
@@ -22,18 +24,30 @@ public class Args {
 
 	/**
 	 * Parses the specified string array to create an instance of the specified type.
+	 *
+	 * @throws ArgsParseException when the specified argument array can't be correctly parsed
+	 * @throws ArgsDefinitionException when the specified type is not a valid args type
+	 * @throws IllegalArgumentException when an illegal argument was passed to {@code parse} (it was likely {@code null} as other cases are covered by other exceptions)
+	 * @throws IllegalStateException when an unexpected internal state is encountered - this is likely a bug
 	 */
 	public static <ARGS_TYPE> ARGS_TYPE parse(
-			String[] argStrings, Class<ARGS_TYPE> type) throws ArgsException {
+			String[] argStrings, Class<ARGS_TYPE> type) throws ArgsParseException {
+		throwIfAnyIsNull(argStrings, type);
 		RecordPackager<ARGS_TYPE> packager = types -> getFromInstanceMap(types, type);
 		return parse(argStrings, packager, type);
 	}
 
 	/**
 	 * Parses the specified string array to create instances of the specified types.
+	 *
+	 * @throws ArgsParseException when the specified argument array can't be correctly parsed
+	 * @throws ArgsDefinitionException when not all specified types are valid args types
+	 * @throws IllegalArgumentException when an illegal argument was passed to {@code parse} (it was likely {@code null} as other cases are covered by other exceptions)
+	 * @throws IllegalStateException when an unexpected internal state is encountered - this is likely a bug
 	 */
 	public static <ARGS_TYPE_1, ARGS_TYPE_2> Parsed2<ARGS_TYPE_1, ARGS_TYPE_2> parse(
-			String[] argStrings, Class<ARGS_TYPE_1> type1, Class<ARGS_TYPE_2> type2) throws ArgsException {
+			String[] argStrings, Class<ARGS_TYPE_1> type1, Class<ARGS_TYPE_2> type2) throws ArgsParseException {
+		throwIfAnyIsNull(argStrings, type1, type2);
 		RecordPackager<Parsed2<ARGS_TYPE_1, ARGS_TYPE_2>> packager = types -> new Parsed2<>(
 				getFromInstanceMap(types, type1),
 				getFromInstanceMap(types, type2));
@@ -42,9 +56,15 @@ public class Args {
 
 	/**
 	 * Parses the specified string array to create instances of the specified types.
+	 *
+	 * @throws ArgsParseException when the specified argument array can't be correctly parsed
+	 * @throws ArgsDefinitionException when not all specified types are valid args types
+	 * @throws IllegalArgumentException when an illegal argument was passed to {@code parse} (it was likely {@code null} as other cases are covered by other exceptions)
+	 * @throws IllegalStateException when an unexpected internal state is encountered - this is likely a bug
 	 */
 	public static <ARGS_TYPE_1, ARGS_TYPE_2, ARGS_TYPE_3> Parsed3<ARGS_TYPE_1, ARGS_TYPE_2, ARGS_TYPE_3> parse(
-			String[] argStrings, Class<ARGS_TYPE_1> type1, Class<ARGS_TYPE_2> type2, Class<ARGS_TYPE_3> type3) throws ArgsException {
+			String[] argStrings, Class<ARGS_TYPE_1> type1, Class<ARGS_TYPE_2> type2, Class<ARGS_TYPE_3> type3) throws ArgsParseException {
+		throwIfAnyIsNull(argStrings, type1, type2, type3);
 		RecordPackager<Parsed3<ARGS_TYPE_1, ARGS_TYPE_2, ARGS_TYPE_3>> packager = types -> new Parsed3<>(
 				getFromInstanceMap(types, type1),
 				getFromInstanceMap(types, type2),
@@ -52,7 +72,25 @@ public class Args {
 		return parse(argStrings, packager, type1, type2, type3);
 	}
 
-	private static <T> T parse(String[] argStrings, RecordPackager<T> packager, Class<?>... types) throws ArgsException {
+	private static void throwIfAnyIsNull(String[] argStrings, Class<?>... types) {
+		if (argStrings == null)
+			throw new IllegalArgumentException("Argument array must not be null.");
+		for (int i = 0; i < argStrings.length; i++)
+			if (argStrings[i] == null)
+				throw new IllegalArgumentException("Argument array must not contain null but does at position %s.".formatted(i));
+		for (int i = 0; i < types.length; i++) {
+			var indexWord = switch (i) {
+				case 0 -> "first";
+				case 1 -> "second";
+				case 2 -> "third";
+				default -> (i - 1) + "th";
+			};
+			if (types[i] == null)
+				throw new IllegalArgumentException("Args type must not be null but %s was.".formatted(indexWord));
+		}
+	}
+
+	private static <T> T parse(String[] argStrings, RecordPackager<T> packager, Class<?>... types) throws ArgsParseException {
 		try {
 			var argsAndTypes = new ArgsFilter().processModes(argStrings, types);
 			throwOnErrors(argsAndTypes.errors(), List.of());
@@ -72,7 +110,7 @@ public class Args {
 			var records = constructArgTypes(constructorArguments);
 			return packager.apply(records);
 		} catch (InternalArgsException ex) {
-			throw new ArgsException(argStrings, List.of(types), ex);
+			throw new ArgsParseException(argStrings, List.of(types), ex);
 		}
 	}
 
@@ -83,7 +121,7 @@ public class Args {
 						stream(type.getRecordComponents())
 								.<Arg<?>> map(Args::readComponent)
 								.toList()
-						))
+				))
 				.collect(toMap(Entry::getKey, Entry::getValue));
 		ensureArgUniqueness(argsByType);
 		return new InferredArgs(argsByType);
@@ -111,7 +149,7 @@ public class Args {
 				uniqueArgs.put(arg.name(), arg);
 		}
 		if (!errors.isEmpty())
-			throw new IllegalArgumentException(String.join("\n", errors));
+			throw new ArgsDefinitionException(DUPLICATE_ARGUMENT_DEFINITION, String.join("\n", errors));
 	}
 
 	private static Arg<?> readComponent(RecordComponent component) {
@@ -159,9 +197,9 @@ public class Args {
 			return canonicalConstructor.newInstance(arguments);
 		} catch (IllegalAccessException ex) {
 			String message = "Make sure Args has reflective access to the argument record, e.g. with an `opens ... to ...` directive.";
-			throw new IllegalStateException(message, ex);
+			throw new ArgsDefinitionException(ILLEGAL_ACCESS, message, ex);
 		} catch (ReflectiveOperationException ex) {
-			String message = "There was an unexpected error while creating the argument record.";
+			String message = "There was an unexpected reflection error while creating the argument record.";
 			throw new IllegalStateException(message, ex);
 		}
 	}
