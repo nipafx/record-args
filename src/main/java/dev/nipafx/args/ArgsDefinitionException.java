@@ -1,7 +1,8 @@
 package dev.nipafx.args;
 
 /**
- * Thrown when parsing command line arguments fails.
+ * Thrown when the types provided to {@link Args#parse(String[], Class) Args::parse}
+ * are ill-defined.
  */
 public class ArgsDefinitionException extends RuntimeException {
 
