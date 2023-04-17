@@ -1,5 +1,7 @@
 package dev.nipafx.args;
 
+import dev.nipafx.args.Records.Action;
+import dev.nipafx.args.Records.ActionArgs;
 import dev.nipafx.args.Records.Class;
 import dev.nipafx.args.Records.Interface;
 import dev.nipafx.args.Records.WithInitializerException;
@@ -12,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import static dev.nipafx.args.ArgsDefinitionErrorCode.DUPLICATE_ARGUMENT_DEFINITION;
 import static dev.nipafx.args.ArgsDefinitionErrorCode.FAULTY_INITIALIZER;
 import static dev.nipafx.args.ArgsDefinitionErrorCode.ILL_DEFINED_ARGS_TYPE;
+import static dev.nipafx.args.ArgsDefinitionErrorCode.MULTIPLE_ACTIONS;
 import static dev.nipafx.args.ArgsDefinitionErrorCode.UNSUPPORTED_ARGUMENT_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -52,6 +55,13 @@ class DefinitionErrorsTests {
 		String[] args = { };
 		var exception = assertThrows(ArgsDefinitionException.class, () -> Args.parse(args, WithInitializerException.class));
 		assertThat(exception.errorCode()).isEqualTo(FAULTY_INITIALIZER);
+	}
+
+	@Test
+	void multipleActions_multipleActionsError() {
+		String[] args = { };
+		var exception = assertThrows(ArgsDefinitionException.class, () -> Args.parse(args, Action.class, ActionArgs.class));
+		assertThat(exception.errorCode()).isEqualTo(MULTIPLE_ACTIONS);
 	}
 
 }

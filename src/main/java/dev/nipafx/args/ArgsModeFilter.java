@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static dev.nipafx.args.ArgsDefinitionErrorCode.ILL_DEFINED_ARGS_TYPE;
+import static dev.nipafx.args.ArgsDefinitionErrorCode.MULTIPLE_ACTIONS;
 import static dev.nipafx.args.ArgsParseErrorCode.FAULTY_ACTION;
 import static dev.nipafx.args.ArgsParseErrorCode.MISSING_ARGUMENT;
 import static dev.nipafx.args.ArgsParseErrorCode.UNPARSEABLE_VALUE;
@@ -22,11 +23,12 @@ class ArgsModeFilter {
 	private final List<ArgsMessage> errors;
 	private final List<Class<? extends Record>> recordTypes;
 
+	private boolean actionFound;
+
 	public ArgsModeFilter() {
 		this.argList = new ArrayList<>();
 		this.errors = new ArrayList<>();
 		this.recordTypes = new ArrayList<>();
-
 	}
 
 	public ArgsAndTypes processModes(String[] argStrings, Class<?>[] types) {
@@ -50,6 +52,7 @@ class ArgsModeFilter {
 		argList.clear();
 		recordTypes.clear();
 		errors.clear();
+		actionFound = false;
 		return argsAndTypes;
 	}
 
@@ -66,6 +69,12 @@ class ArgsModeFilter {
 	}
 
 	private void processAction(Class<?> type) {
+		if (actionFound) {
+			var message = "There can only be one action, but %s is the second such interface.".formatted(type);
+			throw new ArgsDefinitionException(MULTIPLE_ACTIONS, message);
+		}
+		actionFound = true;
+
 		var valueTypesByName = createValuesByTypeName(type);
 		var allowedValues = valueTypesByName
 				.keySet().stream()
