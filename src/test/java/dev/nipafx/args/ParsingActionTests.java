@@ -62,8 +62,8 @@ class ParsingActionTests {
 		var parsed = Args.parse(args, Action.class);
 
 		assertThat(parsed).isInstanceOf(WithInteger.class);
-		var withString = (WithInteger) parsed;
-		assertThat(withString.intArg()).isEqualTo(42);
+		var withInteger = (WithInteger) parsed;
+		assertThat(withInteger.intArg()).isEqualTo(42);
 	}
 
 	@Test
@@ -82,8 +82,8 @@ class ParsingActionTests {
 		var parsed = Args.parse(args, Action.class, WithString.class);
 
 		assertThat(parsed.first()).isInstanceOf(WithInteger.class);
-		var withString = (WithInteger) parsed.first();
-		assertThat(withString.intArg()).isEqualTo(42);
+		var withInteger = (WithInteger) parsed.first();
+		assertThat(withInteger.intArg()).isEqualTo(42);
 
 		assertThat(parsed.second().stringArg()).isEqualTo("string");
 	}
@@ -94,8 +94,8 @@ class ParsingActionTests {
 		var parsed = Args.parse(args, Action.class, WithString.class);
 
 		assertThat(parsed.first()).isInstanceOf(WithInteger.class);
-		var withString = (WithInteger) parsed.first();
-		assertThat(withString.intArg()).isEqualTo(42);
+		var withInteger = (WithInteger) parsed.first();
+		assertThat(withInteger.intArg()).isEqualTo(42);
 
 		assertThat(parsed.second().stringArg()).isEqualTo("string");
 	}

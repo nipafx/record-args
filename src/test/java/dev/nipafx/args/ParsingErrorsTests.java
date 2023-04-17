@@ -1,16 +1,12 @@
 package dev.nipafx.args;
 
-import dev.nipafx.args.Records.Class;
-import dev.nipafx.args.Records.Interface;
 import dev.nipafx.args.Records.None;
 import dev.nipafx.args.Records.WithBoolean;
 import dev.nipafx.args.Records.WithConstructorException;
 import dev.nipafx.args.Records.WithInteger;
 import dev.nipafx.args.Records.WithList;
-import dev.nipafx.args.Records.WithMany;
 import dev.nipafx.args.Records.WithMap;
 import dev.nipafx.args.Records.WithString;
-import dev.nipafx.args.Records.WithStringArray;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 

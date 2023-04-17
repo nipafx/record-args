@@ -95,7 +95,7 @@ class ArgsModeFilter {
 
 		// detect and remove arguments
 		var argumentIndex = argList.indexOf(argumentName);
-		if (argumentIndex == -1){
+		if (argumentIndex == -1) {
 			String message = "No value for required argument '%s'.".formatted(argumentName);
 			errors.add(new ArgsMessage(MISSING_ARGUMENT, message));
 		} else if (argumentIndex == argList.size()) {
