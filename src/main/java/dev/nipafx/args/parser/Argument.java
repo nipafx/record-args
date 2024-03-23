@@ -2,7 +2,7 @@ package dev.nipafx.args.parser;
 
 import java.util.List;
 
-public record Argument(String value, Parameter parameter, List<String> args, int index, int length) {
+public record Argument<T>(T value, Parameter<T> parameter, List<String> args, int index, int length) {
 
 	public Argument {
 		Check.nonNull("value", value);

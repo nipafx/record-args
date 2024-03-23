@@ -13,7 +13,7 @@ class ParserTests {
 	@Test
 	void parseOneOfOneParameter() throws ParseException {
 		String[] args = { "--name", "value" };
-		var parameter = new Parameter(Aliases.withLongName("name"));
+		var parameter = Parameter.ofString(Aliases.withLongName("name"));
 
 		var parsed = parser.parseFirst(args, List.of(parameter));
 
@@ -27,8 +27,8 @@ class ParserTests {
 	@Test
 	void parseFirstOfTwoParameters() throws ParseException {
 		String[] args = { "--name", "value" };
-		var parameter = new Parameter(Aliases.withLongName("name"));
-		var otherParameter = new Parameter(Aliases.withLongName("other-name"));
+		var parameter = Parameter.ofString(Aliases.withLongName("name"));
+		var otherParameter = Parameter.ofString(Aliases.withLongName("other-name"));
 
 		var parsed = parser.parseFirst(args, List.of(parameter, otherParameter));
 
@@ -42,8 +42,8 @@ class ParserTests {
 	@Test
 	void parseSecondOfTwoParameters() throws ParseException {
 		String[] args = { "--other-name", "other value" };
-		var parameter = new Parameter(Aliases.withLongName("name"));
-		var otherParameter = new Parameter(Aliases.withLongName("other-name"));
+		var parameter = Parameter.ofString(Aliases.withLongName("name"));
+		var otherParameter = Parameter.ofString(Aliases.withLongName("other-name"));
 
 		var parsed = parser.parseFirst(args, List.of(parameter, otherParameter));
 
@@ -57,8 +57,8 @@ class ParserTests {
 	@Test
 	void parseTwoOfTwoParametersInOrder() throws ParseException {
 		String[] args = { "--name", "value", "--other-name", "other value" };
-		var parameter = new Parameter(Aliases.withLongName("name"));
-		var otherParameter = new Parameter(Aliases.withLongName("other-name"));
+		var parameter = Parameter.ofString(Aliases.withLongName("name"));
+		var otherParameter = Parameter.ofString(Aliases.withLongName("other-name"));
 		var parameters = List.of(parameter, otherParameter);
 
 		var parsedFirst = parser.parseFirst(args, parameters);
@@ -80,8 +80,8 @@ class ParserTests {
 	@Test
 	void parseTwoOfTwoParametersOutOfOrder() throws ParseException {
 		String[] args = { "--other-name", "other value", "--name", "value" };
-		var parameter = new Parameter(Aliases.withLongName("name"));
-		var otherParameter = new Parameter(Aliases.withLongName("other-name"));
+		var parameter = Parameter.ofString(Aliases.withLongName("name"));
+		var otherParameter = Parameter.ofString(Aliases.withLongName("other-name"));
 		var parameters = List.of(parameter, otherParameter);
 
 		var parsedFirst = parser.parseFirst(args, parameters);
