@@ -169,6 +169,14 @@
 				<artifactId>jreleaser-maven-plugin</artifactId>
 				<configuration>
 					<jreleaser>
+						<files>
+							<active>ALWAYS</active>
+							<globs>
+								<glob>
+									<pattern>target/record-args-*.jar</pattern>
+								</glob>
+							</globs>
+						</files>
 						<signing>
 							<active>ALWAYS</active>
 							<armored>true</armored>
@@ -186,6 +194,11 @@
 								</nexus2>
 							</maven>
 						</deploy>
+						<release>
+							<github>
+								<overwrite>true</overwrite>
+							</github>
+						</release>
 					</jreleaser>
 				</configuration>
 			</plugin>
@@ -217,7 +230,7 @@
 							<execution>
 								<phase>deploy</phase>
 								<goals>
-									<goal>deploy</goal>
+									<goal>release</goal>
 								</goals>
 							</execution>
 						</executions>
