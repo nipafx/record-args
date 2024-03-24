@@ -6,7 +6,7 @@
 
 	<groupId>dev.nipafx.args</groupId>
 	<artifactId>record-args</artifactId>
-	<version>0.5.0-SNAPSHOT</version>
+	<version>${revision}</version>
 
 	<name>RecordArgs</name>
 	<description>A simple command-line argument parser for Java applications that relies on records and sealed interfaces.</description>
@@ -37,6 +37,12 @@
 	<properties>
 		<maven.compiler.release>21</maven.compiler.release>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<!-- the revision needs to be a value that works for `––module-version`,
+		     which, e.g., SNAPSHOT or ${sha1} don't -->
+		<revision>0</revision>
+		<!-- Maven should deploy files to this directory, so JReleaser can pick them up here -->
+		<stagingRepository>target/staging-deploy</stagingRepository>
+		<altDeploymentRepository>local::file:./${stagingRepository}</altDeploymentRepository>
 	</properties>
 
 	<dependencyManagement>
@@ -68,6 +74,11 @@
 		<pluginManagement>
 			<plugins>
 				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>flatten-maven-plugin</artifactId>
+					<version>1.6.0</version>
+				</plugin>
+				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
 					<version>3.13.0</version>
@@ -92,10 +103,36 @@
 					<artifactId>maven-source-plugin</artifactId>
 					<version>3.3.0</version>
 				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-deploy-plugin</artifactId>
+					<version>3.1.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.jreleaser</groupId>
+					<artifactId>jreleaser-maven-plugin</artifactId>
+					<version>1.11.0</version>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 
 		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>flatten-maven-plugin</artifactId>
+				<configuration>
+					<flattenMode>resolveCiFriendliesOnly</flattenMode>
+				</configuration>
+				<executions>
+					<execution>
+						<id>flatten.clean</id>
+						<phase>clean</phase>
+						<goals>
+							<goal>clean</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
@@ -127,7 +164,67 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.jreleaser</groupId>
+				<artifactId>jreleaser-maven-plugin</artifactId>
+				<configuration>
+					<jreleaser>
+						<signing>
+							<active>ALWAYS</active>
+							<armored>true</armored>
+						</signing>
+						<deploy>
+							<maven>
+								<nexus2>
+									<maven-central>
+										<active>ALWAYS</active>
+										<stagingRepositories>${stagingRepository}</stagingRepositories>
+										<url>https://s01.oss.sonatype.org/service/local</url>
+										<closeRepository>true</closeRepository>
+										<releaseRepository>true</releaseRepository>
+									</maven-central>
+								</nexus2>
+							</maven>
+						</deploy>
+					</jreleaser>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<profile>
+			<id>release</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>flatten-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>flatten</id>
+								<phase>process-resources</phase>
+								<goals>
+									<goal>flatten</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.jreleaser</groupId>
+						<artifactId>jreleaser-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<phase>deploy</phase>
+								<goals>
+									<goal>deploy</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 </project>
