@@ -36,6 +36,9 @@ It uses sealed interfaces to model mutually exclusive sets of arguments, so-call
 
 ## Getting started
 
+0. Use your favorite build tool to pull RecordArgs in:
+	* group ID: `dev.nipafx.args`
+	* artifact ID: `record-args`
 1. Create a record like this one (called an _args record_):
 	```java
 	record ServerArgs(String url, int port) { }
