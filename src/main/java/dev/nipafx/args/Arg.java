@@ -13,6 +13,7 @@ import java.util.Set;
 
 import static dev.nipafx.args.ArgsDefinitionErrorCode.UNSUPPORTED_ARGUMENT_TYPE;
 import static dev.nipafx.args.Check.internalErrorOnNull;
+import static dev.nipafx.args.Check.internalErrorOnNullOrBlank;
 
 /**
  * An argument as defined by an args record component, possibly holding a value.
@@ -55,7 +56,7 @@ abstract class AbstractArg<T> {
 	private final Class<T> type;
 
 	protected AbstractArg(String name, Class<T> type) {
-		this.name = internalErrorOnNull(name);
+		this.name = internalErrorOnNullOrBlank(name);
 		this.type = internalErrorOnNull(type);
 	}
 

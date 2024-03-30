@@ -11,9 +11,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
+import java.util.Set;
 
-import static dev.nipafx.args.ArgsParseErrorCode.FAULTY_ACTION;
-import static dev.nipafx.args.ArgsParseErrorCode.UNKNOWN_ARGUMENT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -21,21 +20,27 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class ParsingActionTests {
 
 	@Test
-	void justAction_missingSelection_faultyActionError() {
-		String[] args = { "--intArg", "42" };
+	void justAction_emptyArgs_missingActionError() {
+		String[] args = { };
 		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, Action.class));
 		assertThat(exception.errors())
-				.map(ArgsMessage::code)
-				.containsExactlyInAnyOrder(FAULTY_ACTION);
+				.containsExactlyInAnyOrder(new ArgsMessage.MissingAction(Set.of("withInteger", "withOptional")));
 	}
 
 	@Test
-	void justAction_incorrectSelection_faultyActionError() {
+	void justAction_missingSelection_unknownActionError() {
+		String[] args = { "--intArg", "42" };
+		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, Action.class));
+		assertThat(exception.errors())
+				.containsExactlyInAnyOrder(new ArgsMessage.UnknownAction(Set.of("withInteger", "withOptional"), "--intArg"));
+	}
+
+	@Test
+	void justAction_incorrectSelection_unknownActionError() {
 		String[] args = { "withInt", "--intArg", "42" };
 		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, Action.class));
 		assertThat(exception.errors())
-				.map(ArgsMessage::code)
-				.containsExactlyInAnyOrder(FAULTY_ACTION);
+				.containsExactlyInAnyOrder(new ArgsMessage.UnknownAction(Set.of("withInteger", "withOptional"), "withInt"));
 	}
 
 	@Test
@@ -43,17 +48,15 @@ class ParsingActionTests {
 		String[] args = { "withInteger", "--optionalArg", "string" };
 		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, Action.class));
 		assertThat(exception.errors())
-				.map(ArgsMessage::code)
-				.containsExactlyInAnyOrder(UNKNOWN_ARGUMENT);
+				.containsExactlyInAnyOrder(new ArgsMessage.UnknownArgument("optionalArg"));
 	}
 
 	@Test
-	void justAction_correctSelectionButActionOutOfOrder_faultyActionError() throws ArgsParseException {
+	void justAction_correctSelectionButActionOutOfOrder_unknownActionError() throws ArgsParseException {
 		String[] args = { "--intArg", "42", "withString" };
 		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, Action.class));
 		assertThat(exception.errors())
-				.map(ArgsMessage::code)
-				.containsExactlyInAnyOrder(FAULTY_ACTION);
+				.containsExactlyInAnyOrder(new ArgsMessage.UnknownAction(Set.of("withInteger", "withOptional"), "--intArg"));
 	}
 
 	@Test

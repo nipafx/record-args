@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static dev.nipafx.args.ArgsDefinitionErrorCode.DUPLICATE_ARGUMENT_DEFINITION;
-import static dev.nipafx.args.ArgsDefinitionErrorCode.FAULTY_INITIALIZER;
+import static dev.nipafx.args.ArgsDefinitionErrorCode.FAULTY_STATIC_INITIALIZER;
 import static dev.nipafx.args.ArgsDefinitionErrorCode.ILL_DEFINED_ARGS_TYPE;
 import static dev.nipafx.args.ArgsDefinitionErrorCode.MULTIPLE_ACTIONS;
 import static dev.nipafx.args.ArgsDefinitionErrorCode.UNSUPPORTED_ARGUMENT_TYPE;
@@ -44,17 +44,17 @@ class DefinitionErrorsTests {
 	}
 
 	@Test
-	void expectedArgOfUnsupportedType_unparseableError() {
+	void expectedArgOfUnsupportedType_unsupportedArgumentTypeError() {
 		String[] args = { "--stringsArg", "{ one, two, three }" };
 		var exception = assertThrows(ArgsDefinitionException.class, () -> Args.parse(args, WithStringArray.class));
 		assertThat(exception.errorCode()).isEqualTo(UNSUPPORTED_ARGUMENT_TYPE);
 	}
 
 	@Test
-	void constructorThrowsException_constructorError() {
+	void constructorThrowsException_initializerError() {
 		String[] args = { };
 		var exception = assertThrows(ArgsDefinitionException.class, () -> Args.parse(args, WithInitializerException.class));
-		assertThat(exception.errorCode()).isEqualTo(FAULTY_INITIALIZER);
+		assertThat(exception.errorCode()).isEqualTo(FAULTY_STATIC_INITIALIZER);
 	}
 
 	@Test

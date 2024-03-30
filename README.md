@@ -22,7 +22,7 @@ It uses sealed interfaces to model mutually exclusive sets of arguments, so-call
 	* [Container arguments](#container-arguments)
 		* [Optional arguments](#optional-arguments)
 		* [List arguments](#list-arguments)
-      * [Map arguments](#map-arguments)
+	* [Map arguments](#map-arguments)
 * [Args records](#args-records)
 	* [Validation](#validation)
 	* [Parsing multiple args records](#parsing-multiple-args-records)
@@ -363,19 +363,20 @@ Due to its positional nature, there can only be one action, but it can be combin
 `Args:parse` throws four kinds of exceptions:
 
 * `IllegalArgumentException` (unchecked) when you pass an illegal argument, most likely `null`, to `parse`.
-  This indicates a user error that can be avoided in production - make sure to check the instances you pass to `parse`.
+  This indicates a developer error that can be avoided in production - make sure to check the instances you pass to `parse`.
 * `ArgsDefinitionException` (unchecked) when the types passed to `parse` are not valid args types.
-  This indicates a user error that can be avoided in production - check the error code and message for details and define your args types accordingly.
+  This indicates a developer error that can be avoided in production - check the error code and message for details and define your args types accordingly.
   Two example errors (and their codes):
 	* `UNSUPPORTED_ARGUMENT_TYPE` when an args record component has a type that is not listed under simple or container types
-    * `DUPLICATE_ARGUMENT_DEFINITION` when two args records have a component of the same name  
+	* `DUPLICATE_ARGUMENT_DEFINITION` when two args records have a component of the same name
 	* for all possible errors, check `ArgsDefinitionErrorCode`
 * `ArgsParseException` (checked) when `String[] args` can't be correctly parsed.
   This error must be expected in production as the arguments are human input and may be faulty.
-  Familiarize yourself with the error codes and messages to provide useful feedbacks to said humans.
-  Two example errors (and their codes):
-    * `MISSING_ARGUMENT` when the argument array did not define a value for a non-container component 
-	* `CONSTRUCTOR_EXCEPTION` when the record constructor throws an exception
-    * for all possible errors, check `ArgsParseErrorCode`
+  It exposes a stream of `ArgsMessage`s, which capture all detected issues.
+  They can either be converted to string messages that can be shown to the user or specific subtypes can be examined for more detailed information.
+  Two example subtypes:
+	* `record MissingArgument(String argumentName)` when the argument array did not define a value for a non-container argument
+	* `record FailedConstruction(Throwable exception)` when the args record constructor throws an exception
+	* for all possible errors, check `ArgsMessage`
 * `IllegalStateException` when an unexpected internal state is encountered.
   This is not supposed to happen at all - if it does, it is likely a bug.

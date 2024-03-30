@@ -6,10 +6,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-import static dev.nipafx.args.ArgsParseErrorCode.MISSING_VALUE;
-import static dev.nipafx.args.ArgsParseErrorCode.UNEXPECTED_VALUE;
-import static dev.nipafx.args.ArgsParseErrorCode.UNKNOWN_ARGUMENT;
-import static dev.nipafx.args.ArgsParseErrorCode.UNPARSEABLE_VALUE;
 import static dev.nipafx.args.Check.internalErrorOnNull;
 
 class ArgsParser {
@@ -78,8 +74,7 @@ class ArgsParser {
 			return findArgument(argName)
 					.<State> map(createStateForArg)
 					.orElseGet(() -> {
-						var message = "Encountered name of unknown argument '%s'.".formatted(argName);
-						mutableWarnings.add(new ArgsMessage(UNKNOWN_ARGUMENT, message));
+						mutableWarnings.add(new ArgsMessage.UnknownArgument(argName));
 						return createStateForUnknownArg.apply(argName);
 					});
 		}
@@ -98,9 +93,7 @@ class ArgsParser {
 			try {
 				arg.setValue(argString);
 			} catch (IllegalArgumentException ex) {
-				var message = "Value '%s' could not be parsed to '%s's type %s."
-						.formatted(argString, arg.name(), arg.type().getSimpleName());
-				mutableErrors.add(new ArgsMessage(UNPARSEABLE_VALUE, message, ex));
+				mutableErrors.add(new ArgsMessage.IllegalValue(arg.name(), arg.type(), argString, ex));
 			}
 		}
 
@@ -119,8 +112,7 @@ class ArgsParser {
 					ExpectingValue::new,
 					unknownArgName -> new IgnoringValue(),
 					string -> {
-						var message = "Expected an option but got argument '%s' instead.".formatted(string);
-						mutableErrors.add(new ArgsMessage(UNEXPECTED_VALUE, message));
+						mutableErrors.add(new ArgsMessage.UnexpectedValue(string));
 						return this;
 					});
 		}
@@ -155,10 +147,8 @@ class ArgsParser {
 		private void processMissingValue() {
 			if (currentArg.type() == Boolean.class || currentArg.type() == boolean.class)
 				setValue(currentArg, "true");
-			else {
-				var message = "No value was assigned to arg '%s'.".formatted(currentArg.name());
-				mutableErrors.add(new ArgsMessage(MISSING_VALUE, message));
-			}
+			else
+				mutableErrors.add(new ArgsMessage.MissingValue(currentArg.name()));
 		}
 
 		@Override

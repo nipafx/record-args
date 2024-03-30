@@ -10,12 +10,8 @@ import dev.nipafx.args.Records.WithString;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import static dev.nipafx.args.ArgsParseErrorCode.CONSTRUCTOR_EXCEPTION;
-import static dev.nipafx.args.ArgsParseErrorCode.MISSING_ARGUMENT;
-import static dev.nipafx.args.ArgsParseErrorCode.MISSING_VALUE;
-import static dev.nipafx.args.ArgsParseErrorCode.UNEXPECTED_VALUE;
-import static dev.nipafx.args.ArgsParseErrorCode.UNKNOWN_ARGUMENT;
-import static dev.nipafx.args.ArgsParseErrorCode.UNPARSEABLE_VALUE;
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -27,8 +23,7 @@ class ParsingErrorsTests {
 		String[] args = { };
 		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, WithString.class));
 		assertThat(exception.errors())
-				.map(ArgsMessage::code)
-				.containsExactlyInAnyOrder(MISSING_ARGUMENT);
+				.containsExactlyInAnyOrder(new ArgsMessage.MissingArgument("stringArg"));
 	}
 
 	@Test
@@ -36,8 +31,7 @@ class ParsingErrorsTests {
 		String[] args = { };
 		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, WithBoolean.class));
 		assertThat(exception.errors())
-				.map(ArgsMessage::code)
-				.containsExactlyInAnyOrder(MISSING_ARGUMENT);
+				.containsExactlyInAnyOrder(new ArgsMessage.MissingArgument("booleanArg"));
 	}
 
 	@Test
@@ -45,8 +39,7 @@ class ParsingErrorsTests {
 		String[] args = { "--stringArgs" };
 		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, WithList.class));
 		assertThat(exception.errors())
-				.map(ArgsMessage::code)
-				.containsExactlyInAnyOrder(MISSING_VALUE);
+				.containsExactlyInAnyOrder(new ArgsMessage.MissingValue("stringArgs"));
 	}
 
 	@Test
@@ -54,17 +47,17 @@ class ParsingErrorsTests {
 		String[] args = { "--mapArgs" };
 		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, WithMap.class));
 		assertThat(exception.errors())
-				.map(ArgsMessage::code)
-				.containsExactlyInAnyOrder(MISSING_VALUE);
+				.containsExactlyInAnyOrder(new ArgsMessage.MissingValue("mapArgs"));
 	}
 
 	@Test
-	void mapArgWithIncompleteValue_missingValueError() {
+	void mapArgWithIncompleteValue_illegalValueError() {
 		String[] args = { "--mapArgs", "one" };
 		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, WithMap.class));
 		assertThat(exception.errors())
-				.map(ArgsMessage::code)
-				.containsExactlyInAnyOrder(UNPARSEABLE_VALUE);
+				.hasSize(1)
+				.allMatch(msg -> msg instanceof ArgsMessage.IllegalValue(var argName, var argType, var value, var __)
+								 && argName.equals("mapArgs") && argType == Map.class && value.equals("one"));
 	}
 
 	@Test
@@ -72,8 +65,7 @@ class ParsingErrorsTests {
 		String[] args = { "--stringArg" };
 		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, WithString.class));
 		assertThat(exception.errors())
-				.map(ArgsMessage::code)
-				.containsExactlyInAnyOrder(MISSING_VALUE);
+				.containsExactlyInAnyOrder(new ArgsMessage.MissingValue("stringArg"));
 	}
 
 	@Test
@@ -81,17 +73,16 @@ class ParsingErrorsTests {
 		String[] args = { "--unexpected" };
 		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, None.class));
 		assertThat(exception.errors())
-				.map(ArgsMessage::code)
-				.containsExactlyInAnyOrder(UNKNOWN_ARGUMENT);
+				.containsExactlyInAnyOrder(new ArgsMessage.UnknownArgument("unexpected"));
 	}
 
 	@Test
 	void unexpectedArgWithValue_unknownArgumentError() {
 		String[] args = { "--unexpected", "should_be_ignored" };
 		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, None.class));
+		// this asserts the presence of the message about the argument _and_ the absence of a message about its value
 		assertThat(exception.errors())
-				.map(ArgsMessage::code)
-				.containsExactlyInAnyOrder(UNKNOWN_ARGUMENT);
+				.containsExactlyInAnyOrder(new ArgsMessage.UnknownArgument("unexpected"));
 	}
 
 	@Test
@@ -100,17 +91,17 @@ class ParsingErrorsTests {
 		var exception = assertThrows(
 				ArgsParseException.class, () -> Args.parse(args, WithString.class));
 		assertThat(exception.errors())
-				.map(ArgsMessage::code)
-				.containsExactlyInAnyOrder(UNEXPECTED_VALUE);
+				.containsExactlyInAnyOrder(new ArgsMessage.UnexpectedValue("two"));
 	}
 
 	@Test
-	void expectedArgWithValueOfWrongType_unparseableError() {
+	void expectedArgWithValueOfWrongType_illegalValueError() {
 		String[] args = { "--intArg", "five" };
 		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, WithInteger.class));
 		assertThat(exception.errors())
-				.map(ArgsMessage::code)
-				.containsExactlyInAnyOrder(UNPARSEABLE_VALUE);
+				.hasSize(1)
+				.allMatch(msg -> msg instanceof ArgsMessage.IllegalValue(var argName, var argType, var value, var __)
+								 && argName.equals("intArg") && argType == int.class && value.equals("five"));
 	}
 
 	@Test
@@ -118,8 +109,8 @@ class ParsingErrorsTests {
 		String[] args = { };
 		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, WithConstructorException.class));
 		assertThat(exception.errors())
-				.map(ArgsMessage::code)
-				.containsExactlyInAnyOrder(CONSTRUCTOR_EXCEPTION);
+				.hasSize(1)
+				.allMatch(msg -> msg instanceof ArgsMessage.FailedConstruction(var ex) && ex.getClass() == IllegalArgumentException.class);
 	}
 
 }

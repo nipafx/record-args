@@ -2,6 +2,7 @@ package dev.nipafx.args;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static dev.nipafx.args.Check.internalErrorOnNull;
 import static java.util.stream.Collectors.joining;
@@ -13,7 +14,7 @@ public class ArgsParseException extends Exception {
 
 	private final String[] args;
 	private final List<? extends Class<?>> types;
-	private final List<? extends ArgsMessage> errors;
+	private final List<ArgsMessage> errors;
 
 	ArgsParseException(String[] args, Collection<? extends Class<?>> types, InternalArgsException cause) {
 		super(combineErrors(cause.errors()), cause.getCause());
@@ -29,7 +30,7 @@ public class ArgsParseException extends Exception {
 	}
 
 	/**
-	 * @return the args array passed to {@link Args}
+	 * @return the argument array passed to {@link Args}
 	 */
 	public String[] args() {
 		return args;
@@ -45,8 +46,8 @@ public class ArgsParseException extends Exception {
 	/**
 	 * @return {@link ArgsMessage} that describe the errors
 	 */
-	public List<? extends ArgsMessage> errors() {
-		return errors;
+	public Stream<ArgsMessage> errors() {
+		return errors.stream();
 	}
 
 }

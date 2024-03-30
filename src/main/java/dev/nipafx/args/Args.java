@@ -15,10 +15,8 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static dev.nipafx.args.ArgsDefinitionErrorCode.DUPLICATE_ARGUMENT_DEFINITION;
-import static dev.nipafx.args.ArgsDefinitionErrorCode.FAULTY_INITIALIZER;
+import static dev.nipafx.args.ArgsDefinitionErrorCode.FAULTY_STATIC_INITIALIZER;
 import static dev.nipafx.args.ArgsDefinitionErrorCode.ILLEGAL_ACCESS;
-import static dev.nipafx.args.ArgsParseErrorCode.CONSTRUCTOR_EXCEPTION;
-import static dev.nipafx.args.ArgsParseErrorCode.MISSING_ARGUMENT;
 import static dev.nipafx.args.Check.internalErrorOnNull;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toMap;
@@ -180,8 +178,7 @@ public class Args {
 		Object[] arguments = args.stream()
 				.map(arg -> {
 					if (arg.value().isEmpty()) {
-						String message = "No value for required argument '%s'.".formatted(arg.name());
-						errors.add(new ArgsMessage(MISSING_ARGUMENT, message));
+						errors.add(new ArgsMessage.MissingArgument(arg.name()));
 						return null;
 					} else
 						return arg.value().get();
@@ -220,16 +217,15 @@ public class Args {
 			throw new IllegalStateException(message, ex);
 		// errors that should've been avoided by the caller
 		} catch (InaccessibleObjectException | IllegalAccessException ex) {
-			var message = "Make sure Args has reflective access to the argument record %s, e.g. with an `opens ... to ...` directive."
+			var message = "Make sure Args has reflective access to the args record %s, e.g. with an `opens ... to ...` directive."
 					.formatted(type);
 			throw new ArgsDefinitionException(ILLEGAL_ACCESS, message, ex);
 		} catch (ExceptionInInitializerError ex) {
-			var message = "Invoking the constructor of %s caused an exception in the initializer.".formatted(type);
-			throw new ArgsDefinitionException(FAULTY_INITIALIZER, message, ex);
+			var message = "Invoking the constructor of %s caused an exception in the static initializer.".formatted(type);
+			throw new ArgsDefinitionException(FAULTY_STATIC_INITIALIZER, message, ex);
 		// errors from faulty arguments
 		} catch (InvocationTargetException ex) {
-			var message = "The constructor of %s threw an exception.".formatted(type);
-			return Construction.failed(new ArgsMessage(CONSTRUCTOR_EXCEPTION, message, ex.getTargetException()));
+			return Construction.failed(new ArgsMessage.FailedConstruction(ex.getTargetException()));
 		}
 	}
 

@@ -13,10 +13,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
+import java.util.Set;
 
-import static dev.nipafx.args.ArgsParseErrorCode.MISSING_ARGUMENT;
-import static dev.nipafx.args.ArgsParseErrorCode.UNKNOWN_ARGUMENT;
-import static dev.nipafx.args.ArgsParseErrorCode.UNPARSEABLE_VALUE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -28,17 +26,15 @@ class ParsingModesTests {
 		String[] args = { "--stringArg", "string" };
 		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, Mode.class));
 		assertThat(exception.errors())
-				.map(ArgsMessage::code)
-				.containsExactlyInAnyOrder(MISSING_ARGUMENT);
+				.containsExactlyInAnyOrder(new ArgsMessage.MissingArgument("mode"));
 	}
 
 	@Test
-	void singleMode_incorrectSelection_unparseableValueError() {
+	void singleMode_incorrectSelection_illegalModeValueError() {
 		String[] args = { "--mode", "withStringies", "--stringArg", "string" };
 		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, Mode.class));
 		assertThat(exception.errors())
-				.map(ArgsMessage::code)
-				.containsExactlyInAnyOrder(UNPARSEABLE_VALUE);
+				.containsExactlyInAnyOrder(new ArgsMessage.IllegalModeValue("mode", Set.of("withString", "withList"), "withStringies"));
 	}
 
 	@Test
@@ -46,8 +42,7 @@ class ParsingModesTests {
 		String[] args = { "--mode", "withList", "--stringArg", "string" };
 		var exception = assertThrows(ArgsParseException.class, () -> Args.parse(args, Mode.class));
 		assertThat(exception.errors())
-				.map(ArgsMessage::code)
-				.containsExactlyInAnyOrder(UNKNOWN_ARGUMENT);
+				.containsExactlyInAnyOrder(new ArgsMessage.UnknownArgument("stringArg"));
 	}
 
 	@Test
