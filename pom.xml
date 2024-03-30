@@ -150,6 +150,10 @@
 						<goals>
 							<goal>jar</goal>
 						</goals>
+						<configuration>
+							<doclint>all</doclint>
+							<failOnWarnings>true</failOnWarnings>
+						</configuration>
 					</execution>
 				</executions>
 			</plugin>

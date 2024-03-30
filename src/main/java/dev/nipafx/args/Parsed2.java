@@ -14,6 +14,12 @@ public record Parsed2<ARGS_TYPE_1, ARGS_TYPE_2>(
 		ARGS_TYPE_1 first,
 		ARGS_TYPE_2 second) {
 
+	/**
+	 * Creates a new parsing result.
+	 *
+	 * @param first an instance of the first type passed to {@code Args::parse}
+	 * @param second an instance of the second type passed to {@code Args::parse}
+	 */
 	public Parsed2 {
 		internalErrorOnNull(first);
 		internalErrorOnNull(second);

@@ -6,6 +6,7 @@ package dev.nipafx.args;
  */
 public class ArgsDefinitionException extends RuntimeException {
 
+	@SuppressWarnings("doclint:missing")
 	private final ArgsDefinitionErrorCode errorCode;
 
 	ArgsDefinitionException(ArgsDefinitionErrorCode errorCode, String message) {
@@ -19,6 +20,8 @@ public class ArgsDefinitionException extends RuntimeException {
 	}
 
 	/**
+	 * Returns an error code that describes the cause of the exception.
+	 *
 	 * @return describes the error that caused the exception
 	 */
 	public ArgsDefinitionErrorCode errorCode() {

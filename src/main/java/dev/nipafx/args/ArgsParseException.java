@@ -12,9 +12,9 @@ import static java.util.stream.Collectors.joining;
  */
 public class ArgsParseException extends Exception {
 
-	private final String[] args;
-	private final List<? extends Class<?>> types;
-	private final List<ArgsMessage> errors;
+	@SuppressWarnings("doclint:missing") private final String[] args;
+	@SuppressWarnings("doclint:missing") private final List<? extends Class<?>> types;
+	@SuppressWarnings("doclint:missing") private final List<ArgsMessage> errors;
 
 	ArgsParseException(String[] args, Collection<? extends Class<?>> types, InternalArgsException cause) {
 		super(combineErrors(cause.errors()), cause.getCause());
@@ -30,6 +30,8 @@ public class ArgsParseException extends Exception {
 	}
 
 	/**
+	 * Returns the argument array passed to {@link Args}.
+	 *
 	 * @return the argument array passed to {@link Args}
 	 */
 	public String[] args() {
@@ -37,6 +39,8 @@ public class ArgsParseException extends Exception {
 	}
 
 	/**
+	 * Returns the args types that were supposed to be created.
+	 *
 	 * @return the args types that were supposed to be created
 	 */
 	public List<? extends Class<?>> types() {
@@ -44,7 +48,9 @@ public class ArgsParseException extends Exception {
 	}
 
 	/**
-	 * @return {@link ArgsMessage} that describe the errors
+	 * Returns {@link ArgsMessage}s that describe the errors.
+	 *
+	 * @return {@link ArgsMessage}s that describe the errors
 	 */
 	public Stream<ArgsMessage> errors() {
 		return errors.stream();

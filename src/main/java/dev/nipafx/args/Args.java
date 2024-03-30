@@ -27,9 +27,17 @@ import static java.util.stream.Collectors.toMap;
  */
 public class Args {
 
+	private Args() {
+		// private constructor to prevent initialization
+	}
+
 	/**
 	 * Parses the specified string array to create an instance of the specified type.
 	 *
+	 * @param argStrings the string array to be parsed - usually {@code String[] args} as passed to {@code main}
+	 * @param type the args type to be created - must be a record or a sealed interface with record implementations
+	 * @return an instance of {@code type}, populated with values from {@code argStrings}
+	 * @param <ARGS_TYPE> the args type to be created - must be a record or a sealed interface with record implementations
 	 * @throws ArgsParseException when the specified argument array can't be correctly parsed
 	 * @throws ArgsDefinitionException when the specified type is not a valid args type
 	 * @throws IllegalArgumentException when an illegal argument was passed to {@code parse} (it was likely {@code null} as other cases are covered by other exceptions)
@@ -45,6 +53,12 @@ public class Args {
 	/**
 	 * Parses the specified string array to create instances of the specified types.
 	 *
+	 * @param argStrings the string array to be parsed - usually {@code String[] args} as passed to {@code main}
+	 * @param type1 one of the args types to be created - must be a record or a sealed interface with record implementations
+	 * @param type2 one of the args types to be created - must be a record or a sealed interface with record implementations
+	 * @return a pair of {@code [type1, type2]}, populated with values from {@code argStrings}
+	 * @param <ARGS_TYPE_1> one of the args types to be created - must be a record or a sealed interface with record implementations
+	 * @param <ARGS_TYPE_2> one of the args types to be created - must be a record or a sealed interface with record implementations
 	 * @throws ArgsParseException when the specified argument array can't be correctly parsed
 	 * @throws ArgsDefinitionException when not all specified types are valid args types
 	 * @throws IllegalArgumentException when an illegal argument was passed to {@code parse} (it was likely {@code null} as other cases are covered by other exceptions)
@@ -62,6 +76,14 @@ public class Args {
 	/**
 	 * Parses the specified string array to create instances of the specified types.
 	 *
+	 * @param argStrings the string array to be parsed - usually {@code String[] args} as passed to {@code main}
+	 * @param type1 one of the args types to be created - must be a record or a sealed interface with record implementations
+	 * @param type2 one of the args types to be created - must be a record or a sealed interface with record implementations
+	 * @param type3 one of the args types to be created - must be a record or a sealed interface with record implementations
+	 * @return a triple of {@code [type1, type2, type3]}, populated with values from {@code argStrings}
+	 * @param <ARGS_TYPE_1> one of the args types to be created - must be a record or a sealed interface with record implementations
+	 * @param <ARGS_TYPE_2> one of the args types to be created - must be a record or a sealed interface with record implementations
+	 * @param <ARGS_TYPE_3> one of the args types to be created - must be a record or a sealed interface with record implementations
 	 * @throws ArgsParseException when the specified argument array can't be correctly parsed
 	 * @throws ArgsDefinitionException when not all specified types are valid args types
 	 * @throws IllegalArgumentException when an illegal argument was passed to {@code parse} (it was likely {@code null} as other cases are covered by other exceptions)
