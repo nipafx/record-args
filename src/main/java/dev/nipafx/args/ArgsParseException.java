@@ -25,8 +25,8 @@ public class ArgsParseException extends Exception {
 
 	private static String combineErrors(Collection<ArgsMessage> errors) {
 		return errors.stream()
-				.map(ArgsMessage::toString)
-				.collect(joining("\n"));
+				.map(ArgsMessage::toMessage)
+				.collect(joining(" "));
 	}
 
 	/**
