@@ -360,7 +360,7 @@ Due to its positional nature, there can only be one action, but it can be combin
 
 ## Error Handling
 
-`Args:parse` throws four kinds of exceptions:
+`Args::parse` throws four kinds of exceptions:
 
 * `IllegalArgumentException` (unchecked) when you pass an illegal argument, most likely `null`, to `parse`.
   This indicates a developer error that can be avoided in production - make sure to check the instances you pass to `parse`.
@@ -377,6 +377,11 @@ Due to its positional nature, there can only be one action, but it can be combin
   Two example subtypes:
 	* `record MissingArgument(String argumentName)` when the argument array did not define a value for a non-container argument
 	* `record FailedConstruction(Throwable exception)` when the args record constructor throws an exception
-	* for all possible errors, check `ArgsMessage`
+	* for all possible errors, check `ArgsErrorMessage`
 * `IllegalStateException` when an unexpected internal state is encountered.
   This is not supposed to happen at all - if it does, it is likely a bug.
+
+RecordArgs may also generate warnings.
+If you call `Args::parseLeniently`, they are ignored.
+If you call `Args::parse`, they are exposed as `ArgsParseException`s.
+Check `ArgsWarningMessage` for all possible warnings.

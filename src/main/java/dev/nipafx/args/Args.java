@@ -45,9 +45,7 @@ public class Args {
 	 */
 	public static <ARGS_TYPE> ARGS_TYPE parse(
 			String[] argStrings, Class<ARGS_TYPE> type) throws ArgsParseException {
-		throwIfAnyIsNull(argStrings, type);
-		RecordPackager<ARGS_TYPE> packager = types -> getFromInstanceMap(types, type);
-		return parse(argStrings, packager, type);
+		return parseTo1Record(argStrings, type, false);
 	}
 
 	/**
@@ -66,11 +64,7 @@ public class Args {
 	 */
 	public static <ARGS_TYPE_1, ARGS_TYPE_2> Parsed2<ARGS_TYPE_1, ARGS_TYPE_2> parse(
 			String[] argStrings, Class<ARGS_TYPE_1> type1, Class<ARGS_TYPE_2> type2) throws ArgsParseException {
-		throwIfAnyIsNull(argStrings, type1, type2);
-		RecordPackager<Parsed2<ARGS_TYPE_1, ARGS_TYPE_2>> packager = types -> new Parsed2<>(
-				getFromInstanceMap(types, type1),
-				getFromInstanceMap(types, type2));
-		return parse(argStrings, packager, type1, type2);
+		return parseTo2Records(argStrings, type1, type2, false);
 	}
 
 	/**
@@ -91,12 +85,90 @@ public class Args {
 	 */
 	public static <ARGS_TYPE_1, ARGS_TYPE_2, ARGS_TYPE_3> Parsed3<ARGS_TYPE_1, ARGS_TYPE_2, ARGS_TYPE_3> parse(
 			String[] argStrings, Class<ARGS_TYPE_1> type1, Class<ARGS_TYPE_2> type2, Class<ARGS_TYPE_3> type3) throws ArgsParseException {
+		return parseTo3Records(argStrings, type1, type2, type3, false);
+	}
+
+	/**
+	 * Parses the specified string array to create an instance of the specified type (ignores parser warnings).
+	 *
+	 * @param argStrings the string array to be parsed - usually {@code String[] args} as passed to {@code main}
+	 * @param type the args type to be created - must be a record or a sealed interface with record implementations
+	 * @return an instance of {@code type}, populated with values from {@code argStrings}
+	 * @param <ARGS_TYPE> the args type to be created - must be a record or a sealed interface with record implementations
+	 * @throws ArgsParseException when the specified argument array can't be correctly parsed
+	 * @throws ArgsDefinitionException when the specified type is not a valid args type
+	 * @throws IllegalArgumentException when an illegal argument was passed to {@code parse} (it was likely {@code null} as other cases are covered by other exceptions)
+	 * @throws IllegalStateException when an unexpected internal state is encountered - this is likely a bug
+	 */
+	public static <ARGS_TYPE> ARGS_TYPE parseLeniently(
+			String[] argStrings, Class<ARGS_TYPE> type) throws ArgsParseException {
+		return parseTo1Record(argStrings, type, true);
+	}
+
+	/**
+	 * Parses the specified string array to create instances of the specified types (ignores parser warnings).
+	 *
+	 * @param argStrings the string array to be parsed - usually {@code String[] args} as passed to {@code main}
+	 * @param type1 one of the args types to be created - must be a record or a sealed interface with record implementations
+	 * @param type2 one of the args types to be created - must be a record or a sealed interface with record implementations
+	 * @return a pair of {@code [type1, type2]}, populated with values from {@code argStrings}
+	 * @param <ARGS_TYPE_1> one of the args types to be created - must be a record or a sealed interface with record implementations
+	 * @param <ARGS_TYPE_2> one of the args types to be created - must be a record or a sealed interface with record implementations
+	 * @throws ArgsParseException when the specified argument array can't be correctly parsed
+	 * @throws ArgsDefinitionException when not all specified types are valid args types
+	 * @throws IllegalArgumentException when an illegal argument was passed to {@code parse} (it was likely {@code null} as other cases are covered by other exceptions)
+	 * @throws IllegalStateException when an unexpected internal state is encountered - this is likely a bug
+	 */
+	public static <ARGS_TYPE_1, ARGS_TYPE_2> Parsed2<ARGS_TYPE_1, ARGS_TYPE_2> parseLeniently(
+			String[] argStrings, Class<ARGS_TYPE_1> type1, Class<ARGS_TYPE_2> type2) throws ArgsParseException {
+		return parseTo2Records(argStrings, type1, type2, true);
+	}
+
+	/**
+	 * Parses the specified string array to create instances of the specified types (ignores parser warnings).
+	 *
+	 * @param argStrings the string array to be parsed - usually {@code String[] args} as passed to {@code main}
+	 * @param type1 one of the args types to be created - must be a record or a sealed interface with record implementations
+	 * @param type2 one of the args types to be created - must be a record or a sealed interface with record implementations
+	 * @param type3 one of the args types to be created - must be a record or a sealed interface with record implementations
+	 * @return a triple of {@code [type1, type2, type3]}, populated with values from {@code argStrings}
+	 * @param <ARGS_TYPE_1> one of the args types to be created - must be a record or a sealed interface with record implementations
+	 * @param <ARGS_TYPE_2> one of the args types to be created - must be a record or a sealed interface with record implementations
+	 * @param <ARGS_TYPE_3> one of the args types to be created - must be a record or a sealed interface with record implementations
+	 * @throws ArgsParseException when the specified argument array can't be correctly parsed
+	 * @throws ArgsDefinitionException when not all specified types are valid args types
+	 * @throws IllegalArgumentException when an illegal argument was passed to {@code parse} (it was likely {@code null} as other cases are covered by other exceptions)
+	 * @throws IllegalStateException when an unexpected internal state is encountered - this is likely a bug
+	 */
+	public static <ARGS_TYPE_1, ARGS_TYPE_2, ARGS_TYPE_3> Parsed3<ARGS_TYPE_1, ARGS_TYPE_2, ARGS_TYPE_3> parseLeniently(
+			String[] argStrings, Class<ARGS_TYPE_1> type1, Class<ARGS_TYPE_2> type2, Class<ARGS_TYPE_3> type3) throws ArgsParseException {
+		return parseTo3Records(argStrings, type1, type2, type3, true);
+	}
+
+	private static <ARGS_TYPE> ARGS_TYPE parseTo1Record(
+			String[] argStrings, Class<ARGS_TYPE> type, boolean lenient) throws ArgsParseException {
+		throwIfAnyIsNull(argStrings, type);
+		RecordPackager<ARGS_TYPE> packager = types -> getFromInstanceMap(types, type);
+		return parse(argStrings, lenient, packager, type);
+	}
+
+	private static <ARGS_TYPE_1, ARGS_TYPE_2> Parsed2<ARGS_TYPE_1, ARGS_TYPE_2> parseTo2Records(
+			String[] argStrings, Class<ARGS_TYPE_1> type1, Class<ARGS_TYPE_2> type2, boolean lenient) throws ArgsParseException {
+		throwIfAnyIsNull(argStrings, type1, type2);
+		RecordPackager<Parsed2<ARGS_TYPE_1, ARGS_TYPE_2>> packager = types -> new Parsed2<>(
+				getFromInstanceMap(types, type1),
+				getFromInstanceMap(types, type2));
+		return parse(argStrings, lenient, packager, type1, type2);
+	}
+
+	private static <ARGS_TYPE_1, ARGS_TYPE_2, ARGS_TYPE_3> Parsed3<ARGS_TYPE_1, ARGS_TYPE_2, ARGS_TYPE_3> parseTo3Records(
+			String[] argStrings, Class<ARGS_TYPE_1> type1, Class<ARGS_TYPE_2> type2, Class<ARGS_TYPE_3> type3, boolean lenient) throws ArgsParseException {
 		throwIfAnyIsNull(argStrings, type1, type2, type3);
 		RecordPackager<Parsed3<ARGS_TYPE_1, ARGS_TYPE_2, ARGS_TYPE_3>> packager = types -> new Parsed3<>(
 				getFromInstanceMap(types, type1),
 				getFromInstanceMap(types, type2),
 				getFromInstanceMap(types, type3));
-		return parse(argStrings, packager, type1, type2, type3);
+		return parse(argStrings, lenient, packager, type1, type2, type3);
 	}
 
 	private static void throwIfAnyIsNull(String[] argStrings, Class<?>... types) {
@@ -117,7 +189,7 @@ public class Args {
 		}
 	}
 
-	private static <T> T parse(String[] argStrings, RecordPackager<T> packager, Class<?>... types) throws ArgsParseException {
+	private static <T> T parse(String[] argStrings, boolean lenient, RecordPackager<T> packager, Class<?>... types) throws ArgsParseException {
 		try {
 			var argsAndTypes = new ArgsModeFilter().processModes(argStrings, types);
 			throwOnErrors(argsAndTypes.errors());
@@ -126,7 +198,7 @@ public class Args {
 			var messages = ArgsParser
 					.forArgs(args.all().toList())
 					.parse(argsAndTypes.argsStrings());
-			throwOnErrors(messages.errors(), messages.warnings());
+			throwOnErrorsAndMaybeWarnings(messages.errors(), messages.warnings(), lenient);
 
 			var constructorArguments = prepareConstructions(args);
 			var constructorErrors = constructorArguments.stream()
@@ -252,15 +324,16 @@ public class Args {
 	}
 
 	private static void throwOnErrors(List<ArgsMessage> errors) {
-		throwOnErrors(errors, List.of());
+		throwOnErrorsAndMaybeWarnings(errors, List.of(), true);
 	}
 
-	private static void throwOnErrors(List<ArgsMessage> errors, List<ArgsMessage> warnings) {
-		if (errors.isEmpty() && warnings.isEmpty())
+	private static void throwOnErrorsAndMaybeWarnings(List<ArgsMessage> errors, List<ArgsMessage> warnings, boolean lenient) {
+		if (errors.isEmpty() && (lenient || warnings.isEmpty()))
 			return;
 
 		List<ArgsMessage> messages = new ArrayList<>(errors);
-		messages.addAll(warnings);
+		if (!lenient)
+			messages.addAll(warnings);
 		throw new InternalArgsException(messages);
 	}
 
