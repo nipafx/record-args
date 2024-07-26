@@ -4,18 +4,13 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
-      releasing:
-        description: "Is this a release build?"
-        type: boolean
-        default: false
-        required: true
       version:
         description: 'Version string, e.g. 0.4.2'
         required: true
 
 jobs:
   release:
-    if: github.event.inputs.releasing && github.event.inputs.version != ''
+    if: github.event.inputs.version != ''
     runs-on: ubuntu-latest
     steps:
       - name: Check out
