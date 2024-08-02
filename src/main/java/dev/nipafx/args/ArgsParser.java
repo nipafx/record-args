@@ -145,7 +145,10 @@ class ArgsParser {
 		}
 
 		private void processMissingValue() {
-			if (currentArg.type() == Boolean.class || currentArg.type() == boolean.class)
+			Class<?> type = currentArg.type();
+			var isBoolean = type == Boolean.class || type == boolean.class
+					|| currentArg instanceof OptionalArg<?> opt && opt.valueType() == Boolean.class;
+			if (isBoolean)
 				setValue(currentArg, "true");
 			else
 				mutableErrors.add(new ArgsMessage.MissingValue(currentArg.name()));

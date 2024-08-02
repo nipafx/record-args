@@ -18,6 +18,7 @@ class Records {
 	record WithBoolean(boolean booleanArg) { }
 
 	record WithOptional(Optional<String> optionalArg) implements Action { }
+	record WithOptionalBoolean(Optional<Boolean> optionalArg) { }
 	record WithList(List<String> stringArgs) implements Mode { }
 	record WithListAndMore(List<String> stringArgs, boolean booleanArg) { }
 	record WithMap(Map<Integer, String> mapArgs) implements Type { }

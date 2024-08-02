@@ -1,6 +1,7 @@
 package dev.nipafx.args;
 
 import dev.nipafx.args.Records.WithOptional;
+import dev.nipafx.args.Records.WithOptionalBoolean;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -23,6 +24,38 @@ class ParsingOptionalValuesTests {
 		WithOptional parsed = Args.parse(args, WithOptional.class);
 
 		assertThat(parsed.optionalArg()).contains("string");
+	}
+
+	@Test
+	void withoutArgs_programWithOptionalBooleanArg_parses() throws ArgsParseException {
+		String[] args = { };
+		WithOptionalBoolean parsed = Args.parse(args, WithOptionalBoolean.class);
+
+		assertThat(parsed.optionalArg()).isEmpty();
+	}
+
+	@Test
+	void withFalseArg_programWithOptionalBooleanArg_parses() throws ArgsParseException {
+		String[] args = { "--optionalArg", "false" };
+		WithOptionalBoolean parsed = Args.parse(args, WithOptionalBoolean.class);
+
+		assertThat(parsed.optionalArg()).contains(false);
+	}
+
+	@Test
+	void withTrueArg_programWithOptionalBooleanArg_parses() throws ArgsParseException {
+		String[] args = { "--optionalArg", "true" };
+		WithOptionalBoolean parsed = Args.parse(args, WithOptionalBoolean.class);
+
+		assertThat(parsed.optionalArg()).contains(true);
+	}
+
+	@Test
+	void withArgButWithoutValue_programWithOptionalBooleanArg_parses() throws ArgsParseException {
+		String[] args = { "--optionalArg" };
+		WithOptionalBoolean parsed = Args.parse(args, WithOptionalBoolean.class);
+
+		assertThat(parsed.optionalArg()).contains(true);
 	}
 
 }

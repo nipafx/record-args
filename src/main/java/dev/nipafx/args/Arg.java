@@ -189,6 +189,10 @@ final class OptionalArg<T> extends AbstractArg<Optional> implements Arg<Optional
 		return Optional.of(value);
 	}
 
+	public Class<T> valueType() {
+		return valueType;
+	}
+
 }
 
 @SuppressWarnings("rawtypes")
