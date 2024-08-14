@@ -187,7 +187,11 @@ class ArgsParser {
 
 		@Override
 		public State transition(String argString) {
-			return new ExpectingName();
+			return transition(
+					argString,
+					ExpectingValue::new,
+					unknownArgName -> new IgnoringValue(),
+					ignoredValue -> this);
 		}
 
 	}
