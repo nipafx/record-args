@@ -4,7 +4,7 @@ RecordArgs is a simple command-line argument parser for Java applications that r
 
 ```java
 record ServerArgs(String url, int port) { }
-	
+
 // launch command: "java [...] --url localhost --port 8080"
 public static void main(String[] args) throws ArgsParseException {
 	ServerArgs serverArgs = Args.parse(args, ServerArgs.class);
@@ -22,7 +22,7 @@ It uses sealed interfaces to model mutually exclusive sets of arguments, so-call
 	* [Container arguments](#container-arguments)
 		* [Optional arguments](#optional-arguments)
 		* [List arguments](#list-arguments)
-	* [Map arguments](#map-arguments)
+		* [Map arguments](#map-arguments)
 * [Args records](#args-records)
 	* [Validation](#validation)
 	* [Parsing multiple args records](#parsing-multiple-args-records)
@@ -83,7 +83,7 @@ record ServerArgs(String url, int port) { }
 …the arguments `--url` and `--port` are parsed.
 
 Camel-cased component names are interpreted as is, i.e. they are _not_ kebap-cased.
-So a component `remoteUrl` would be mapped to the argument name `--remoteUrl`, not `--remote-url`. 
+So a component `remoteUrl` would be mapped to the argument name `--remoteUrl`, not `--remote-url`.
 
 ### Simple arguments
 
