@@ -8,14 +8,12 @@ import dev.nipafx.args.Records.WithInteger;
 import dev.nipafx.args.Records.WithLong;
 import dev.nipafx.args.Records.WithPath;
 import dev.nipafx.args.Records.WithString;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Nested
 class ParsingSingleValueTests {
 
 	@Test

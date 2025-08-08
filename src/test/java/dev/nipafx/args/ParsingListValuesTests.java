@@ -2,12 +2,10 @@ package dev.nipafx.args;
 
 import dev.nipafx.args.Records.WithList;
 import dev.nipafx.args.Records.WithListAndMore;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Nested
 class ParsingListValuesTests {
 
 	@Test

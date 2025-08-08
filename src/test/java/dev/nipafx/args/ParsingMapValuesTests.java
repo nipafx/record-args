@@ -2,14 +2,12 @@ package dev.nipafx.args;
 
 import dev.nipafx.args.Records.WithMap;
 import dev.nipafx.args.Records.WithMapAndMore;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Nested
 class ParsingMapValuesTests {
 
 	@Test

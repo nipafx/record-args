@@ -2,12 +2,10 @@ package dev.nipafx.args;
 
 import dev.nipafx.args.Records.WithOptional;
 import dev.nipafx.args.Records.WithOptionalBoolean;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Nested
 class ParsingOptionalValuesTests {
 
 	@Test
